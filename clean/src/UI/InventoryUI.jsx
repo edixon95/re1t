@@ -1,13 +1,13 @@
 import { inventory } from "../Player/Inventory"
 
-export const InventoryWindow = () => {
+export const InventoryWindow = ({ selectedIndex, focused }) => {
     return (
         <div
             style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(4, 1fr)", // 4 columns
-                gridTemplateRows: "repeat(3, 1fr)",    // 3 rows
-                gap: "10px",                           // spacing between slots
+                gridTemplateColumns: "repeat(4, 1fr)",
+                gridTemplateRows: "repeat(3, 1fr)",
+                gap: "10px",
                 width: "100%",
                 height: "100%",
                 boxSizing: "border-box",
@@ -17,13 +17,16 @@ export const InventoryWindow = () => {
                 <div
                     key={i}
                     style={{
-                        border: "2px solid white",
+                        border:
+                            focused && i === selectedIndex
+                                ? "2px solid yellow"
+                                : "2px solid white",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                         fontSize: "22px",
                         fontWeight: "bold",
-                        boxSizing: "border-box"
+                        boxSizing: "border-box",
                     }}
                 >
                     {slot ? slot.item : "—"}
