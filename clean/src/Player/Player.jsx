@@ -17,7 +17,6 @@ export const Player = ({ playerRef, level }) => {
 
 
   const [aiming, setAiming] = useState(false);
-  console.log(inventory)
 
   useEffect(() => {
     window.keys = {};
@@ -42,12 +41,6 @@ export const Player = ({ playerRef, level }) => {
 
     if (tabPressed && !prevTabKeyRef.current) {
       menuOpenRef.current = !menuOpenRef.current;
-
-      if (menuOpenRef.current) {
-        console.log("Menu opened");
-      } else {
-        console.log("Menu closed");
-      }
     }
 
     prevTabKeyRef.current = tabPressed;

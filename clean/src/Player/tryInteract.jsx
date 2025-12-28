@@ -9,7 +9,6 @@ const interactionDirection = new THREE.Vector3();
 
 export const tryInteract = (player, level) => {
     if (!player) return;
-    console.log("l", level)
     const origin = player.position.clone();
     const CONE_ANGLE = Math.PI / 4;
     const INTERACT_DISTANCE = 0.75;
@@ -79,10 +78,9 @@ export const tryInteract = (player, level) => {
         }
     }
 
-    if (!hitItem) {
-        console.log("Nothing to interact with");
+    if (!hitItem)
         return;
-    }
+
 
     if (hitItem.userData.type === "item") {
         const item = ITEM_TABLE[level].find((x) => x.item === hitItem.userData.item)

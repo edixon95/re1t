@@ -16,7 +16,6 @@ const notify = () => {
 }
 
 export const tryAddInventory = (item) => {
-    console.log("adding item:", item)
 
     if (item.stackable) {
         const idx = inventory.findIndex(
@@ -54,7 +53,6 @@ const findDoorById = (doorId) => {
 };
 
 export const tryUseInventoryItem = (requestedItem, isAnonymous, isSingleUse, usedOn) => {
-    console.log(requestedItem)
     const idx = inventory.findIndex(
         x => x && x.item === requestedItem
     )

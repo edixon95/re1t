@@ -10,7 +10,6 @@ export const CameraSystem = ({ region, gameState }) => {
 
     const level = gameState.level
     const levelCameras = CAMERA_TABLE[level]
-    console.log(levelCameras)
     if (!levelCameras) return
 
     const cam = levelCameras[region]
