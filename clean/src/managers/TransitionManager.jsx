@@ -2,6 +2,7 @@
 import { DOOR_TABLE } from "../data/doorTable";
 import { useState, useEffect } from "react";
 import { isTransition } from "../Player/Player"; // use the existing ref
+import { tryUseInventoryItem } from "../Player/Inventory";
 
 export const TransitionManager = (playerRef, setGameState, isTransitionRef) => {
     if (!playerRef || !setGameState) return;
@@ -11,7 +12,16 @@ export const TransitionManager = (playerRef, setGameState, isTransitionRef) => {
         const targetLevel = fromDoor.leadsTo.level;
         const targetDoorId = fromDoor.leadsTo.doorId;
 
+        console.log(fromDoor)
+
         if (!targetLevel || !targetDoorId) return;
+
+        if (fromDoor.requiredItem && !fromDoor?.isUnlocked) {
+            console.log(e.detail)
+            if (!tryUseInventoryItem(fromDoor.requiredItem, fromDoor.isAnonymous, fromDoor.isKeySingle, fromDoor.id)) {
+                return;
+            }
+        }
 
         // 1️⃣ Lock input & show fade
         if (isTransitionRef) isTransitionRef.current = true;

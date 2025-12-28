@@ -6,7 +6,7 @@ export const ItemManager = ({ items }) => {
     itemMeshes.length = 0;
     return (
         <>
-            {items.map((item, i) => {
+            {items.filter((item) => !item?.isCollected).map((item, i) => {
                 const ref = useRef();
                 itemMeshes.push(ref);
 

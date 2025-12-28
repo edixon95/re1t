@@ -4,6 +4,7 @@ import { PropManager } from "../../managers/PropManager"
 import { ItemManager } from "../../managers/ItemManager"
 import { DoorManager } from "../../managers/DoorManager"
 import { DOOR_TABLE } from "../../data/doorTable"
+import { ITEM_TABLE } from "../../data/itemTable"
 
 export const WorldIntroTwo = () => {
     // Different corridor layout + color
@@ -17,12 +18,6 @@ export const WorldIntroTwo = () => {
         { position: [1, 0.5, -0.8], size: [1, 1.2, 1] },
         { position: [4, 0.5, -3], size: [0.5, 1, 2] },
         { position: [6, 0.5, -6], size: [1, 1, 1] },
-    ]
-
-    // Different item placement
-    const items = [
-        { position: [3, 0.25, 0.6], size: [0.3, 0.3, 0.3], item: "Herb" },
-        { position: [6, 0.25, -5], size: [0.3, 0.3, 0.3], item: "Ammo" },
     ]
 
     const floorRefs = floors.map(() => useRef())
@@ -65,7 +60,7 @@ export const WorldIntroTwo = () => {
 
             <WallManager floors={floors} />
             <PropManager props={props} />
-            <ItemManager items={items} />
+            <ItemManager items={ITEM_TABLE["introTwo"]} />
             <DoorManager doors={DOOR_TABLE["introTwo"]} />
         </>
     )

@@ -10,6 +10,8 @@ export const DOOR_TABLE = {
                 doorId: "B_HALLWAY_ENTRY",
             },
             requiredItem: "KeyCard",
+            isAnonymous: true,
+            isKeySingle: true,
             spawn: {
                 position: [-3, 0.5, 7.25], // <-- exact spawn inside map
                 rotationY: 0           // <-- facing into the next room
@@ -26,6 +28,9 @@ export const DOOR_TABLE = {
                 level: "intro",
                 doorId: "A_HALLWAY_EXIT",
             },
+            requiredItem: "Blue KeyCard",
+            isAnonymous: false,
+            isKeySingle: false,
             spawn: {
                 position: [5, 0.5, -7.25], // <-- exact spawn inside map
                 rotationY: Math.PI               // <-- facing into intro

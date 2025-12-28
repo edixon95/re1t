@@ -2,13 +2,14 @@ import * as THREE from "three";
 import { itemMeshes } from "../managers/ItemManager";
 import { tryAddInventory } from "./Inventory";
 import { triggerPickupText } from "../UI/InformationalUI";
+import { ITEM_TABLE } from "../data/itemTable";
 
 const interactionRaycaster = new THREE.Raycaster();
 const interactionDirection = new THREE.Vector3();
 
-export const tryInteract = (player) => {
+export const tryInteract = (player, level) => {
     if (!player) return;
-
+    console.log("l", level)
     const origin = player.position.clone();
     const CONE_ANGLE = Math.PI / 4;
     const INTERACT_DISTANCE = 0.75;
@@ -84,7 +85,11 @@ export const tryInteract = (player) => {
     }
 
     if (hitItem.userData.type === "item") {
+        const item = ITEM_TABLE[level].find((x) => x.item === hitItem.userData.item)
+        if (!item) return;
+
         if (!!tryAddInventory(hitItem.userData)) {
+            item.isCollected = true;
             triggerPickupText(hitItem.userData);
             hitItem.parent.remove(hitItem);
 

@@ -9,7 +9,7 @@ import { inventory } from "./Inventory";
 export const menuOpenRef = { current: false }; // lock inputs
 export const isTransition = { current: false }; // Lock but no menu
 
-export const Player = ({ playerRef }) => {
+export const Player = ({ playerRef, level }) => {
   const aimingRef = useRef(false); // is aiming
   const prevAimKeyRef = useRef(false); // toggle aim
   const prevSpaceKeyRef = useRef(false); // track space
@@ -52,7 +52,7 @@ export const Player = ({ playerRef }) => {
 
     prevTabKeyRef.current = tabPressed;
 
-    if (menuOpenRef.current) return; // You can't do inputs from here if the menu is open
+    if (menuOpenRef.current) return; // Can't do inputs if menu is open
 
     const spacePressed = !!window.keys["Space"];
 
@@ -63,32 +63,43 @@ export const Player = ({ playerRef }) => {
       } else {
         // INTERACT
         console.log("Player interacts");
-        tryInteract(playerRef.current)
+        tryInteract(playerRef.current, level)
       }
     }
     prevSpaceKeyRef.current = spacePressed;
 
     // Movement start
     const rotationSpeed = 2;
-    const speed = window.keys["ShiftLeft"] ? 3 : 2;
+
+    let speed = 2;
+    // You can't sprint backwards
+    if (window.keys["ShiftLeft"] && !window.keys["KeyS"]) {
+      speed = 3;
+    }
+
     const moveDistance = speed * delta;
 
+    // Determine rotation direction multiplier
+    let rotationMultiplier = 1;
+    if (window.keys["KeyS"] && !aimingRef.current) {
+      rotationMultiplier = -1; // Reverse rotation when moving backward
+    }
+
     // Rotation
-    if (window.keys["KeyA"]) playerRef.current.rotation.y += rotationSpeed * delta;
-    if (window.keys["KeyD"]) playerRef.current.rotation.y -= rotationSpeed * delta;
+    if (window.keys["KeyA"]) playerRef.current.rotation.y += rotationSpeed * delta * rotationMultiplier;
+    if (window.keys["KeyD"]) playerRef.current.rotation.y -= rotationSpeed * delta * rotationMultiplier;
 
     // Aiming
     const aimKeyPressed = !!window.keys["ControlLeft"];
 
-    // Toggle
+    // Toggle aiming
     if (aimKeyPressed && !prevAimKeyRef.current) {
       aimingRef.current = !aimingRef.current;
       setAiming(aimingRef.current);
     }
     prevAimKeyRef.current = aimKeyPressed;
 
-
-    // Can't move forwrad or backwards while aiming
+    // Can't move forward or backward while aiming
     if (!aimingRef.current) {
       direction.current.set(0, 0, -1);
       if (window.keys["KeyW"]) {
@@ -105,6 +116,7 @@ export const Player = ({ playerRef }) => {
       }
     }
   });
+
 
   return (
     <mesh

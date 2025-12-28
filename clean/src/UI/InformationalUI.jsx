@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 
 let triggerFn = null
 
@@ -8,24 +8,47 @@ export const triggerPickupText = (item) => {
     }
 }
 
+export const interactionAttempt = (isAnonymous, item) => {
+    if (triggerFn) {
+        if (isAnonymous) {
+            triggerFn(`Requires item`)
+        } else {
+            triggerFn(`Requires ${item}`)
+        }
+    }
+}
+
+export const interactionSuccess = (item) => {
+    if (triggerFn) {
+        triggerFn(`Used ${item}`)
+    }
+}
+
 export const InformationalUI = () => {
     const [text, setText] = useState("")
     const [visible, setVisible] = useState(false)
+    const timeoutRef = useRef(null) // Store the timeout ID
 
     useEffect(() => {
-        // Register trigger
         triggerFn = (message) => {
             setText(message)
             setVisible(true)
 
-            // Auto-hide after 2.5s
-            setTimeout(() => {
+            // Clear previous timeout if it exists
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current)
+            }
+
+            // Auto-hide after 5.5s
+            timeoutRef.current = setTimeout(() => {
                 setVisible(false)
+                timeoutRef.current = null
             }, 5500)
         }
 
         return () => {
             triggerFn = null
+            if (timeoutRef.current) clearTimeout(timeoutRef.current)
         }
     }, [])
 

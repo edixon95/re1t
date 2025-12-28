@@ -4,6 +4,7 @@ import { PropManager } from "../../managers/PropManager";
 import { ItemManager } from "../../managers/ItemManager";
 import { DoorManager } from "../../managers/DoorManager";
 import { DOOR_TABLE } from "../../data/doorTable";
+import { ITEM_TABLE } from "../../data/itemTable";
 
 export const WorldIntro = () => {
     // Define floors
@@ -16,12 +17,6 @@ export const WorldIntro = () => {
         { position: [2, 0.5, 0], size: [1, 1, 1] },
         { position: [-2, 0.5, 3], size: [2, 1, 0.5] },
     ];
-
-    const items = [
-        { position: [2, 0.25, 0.8], size: [0.3, 0.3, 0.3], item: "Gun" },
-        { position: [-3, 0.25, 3], size: [0.3, 0.3, 0.3], item: "KeyCard" },
-    ];
-
 
     // Store floor meshes in an array for debugging or raycasting
     const floorRefs = floors.map(() => useRef());
@@ -65,7 +60,7 @@ export const WorldIntro = () => {
 
             <WallManager floors={floors} />
             <PropManager props={props} />
-            <ItemManager items={items} />
+            <ItemManager items={ITEM_TABLE["intro"]} />
             <DoorManager doors={DOOR_TABLE["intro"]} />
 
         </>
