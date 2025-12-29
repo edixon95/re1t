@@ -52,6 +52,18 @@ const findDoorById = (doorId) => {
     return null; // not found
 };
 
+export const tryReloadWeapon = (ammo, isConsumed = true) => {
+    const idx = inventory.findIndex(
+        x => x && x.item === ammo
+    )
+
+    if (isConsumed) {
+        inventory[idx] = null;
+    }
+
+    return true;
+}
+
 export const tryUseInventoryItem = (requestedItem, isAnonymous, isSingleUse, usedOn) => {
     const idx = inventory.findIndex(
         x => x && x.item === requestedItem
