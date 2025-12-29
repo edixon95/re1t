@@ -1,6 +1,6 @@
 import { inventory } from "../Player/Inventory"
 
-export const InventoryWindow = ({ selectedIndex, focused }) => {
+export const InventoryWindow = ({ selectedIndex, focused, equipped }) => {
     return (
         <div
             style={{
@@ -27,8 +27,10 @@ export const InventoryWindow = ({ selectedIndex, focused }) => {
                         fontSize: "22px",
                         fontWeight: "bold",
                         boxSizing: "border-box",
+                        position: "relative"
                     }}
                 >
+                    {equipped?.equipped === slot?.item && <div style={{ position: "absolute", top: 10, left: 10 }}>Equipped</div>}
                     {slot ? slot.item : "—"}
                 </div>
             ))}

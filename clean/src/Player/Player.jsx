@@ -4,17 +4,16 @@ import { useEffect, useRef, useState } from "react";
 
 import { canMove } from "../helpers/canMove";
 import { tryInteract } from "./tryInteract";
-import { inventory } from "./Inventory";
 
 export const menuOpenRef = { current: false }; // lock inputs
 export const isTransition = { current: false }; // Lock but no menu
+export const equippedItem = { equipped: null, cAmmo: null, mAmmo: null }
 
 export const Player = ({ playerRef, level }) => {
   const aimingRef = useRef(false); // is aiming
   const prevAimKeyRef = useRef(false); // toggle aim
   const prevSpaceKeyRef = useRef(false); // track space
   const prevTabKeyRef = useRef(false); // local menu track
-
 
   const [aiming, setAiming] = useState(false);
 
