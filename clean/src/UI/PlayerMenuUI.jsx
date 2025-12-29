@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react"
-import { onInventoryChange, inventory, tryUseInventoryItem, tryReloadWeapon } from "../Player/Inventory"
+import { onInventoryChange, inventory, tryReloadWeapon } from "../Player/Inventory"
 import { equippedItem, menuOpenRef } from "../Player/Player"
 import { InventoryWindow } from "./InventoryUI"
 import { ITEM_INTERACT_TABLE } from "../data/itemInteractTable"
-import { ITEM_TABLE } from "../data/itemTable"
+import { fullItemRef } from "../data/itemTable"
 import { AMMO_TABLE } from "../data/ammoTable"
 
 const INVENTORY_COLUMNS = 4
@@ -29,41 +29,35 @@ export const PlayerMenuUI = () => {
         .fill(null)
         .map((_, i) => inventory[i] ?? null)
 
-    const isItemEquipped = (possibleItem) => {
-        return Object.hasOwn(ITEM_INTERACT_TABLE, possibleItem)
-    }
-
     const tryFindAmmoAndWeapon = (weaponType) => {
         const ammoType = AMMO_TABLE[weaponType];
         if (!ammoType) return false;
         const hasAmmoType = inventory.find((x) => x?.item === ammoType?.item)
         if (!hasAmmoType) return false;
 
-        Object.entries(ITEM_TABLE).forEach((topLevel) => {
-            topLevel[1].forEach((item) => {
-                if (item.item === ammoType.item) {
-                    // TODO: count ammo, doesnt always consume
-                    if (tryReloadWeapon(ammoType.item, true)) {
-                        const selIdx = topLevel[1].findIndex((x) => x.item === weaponType)
-                        if (selIdx === -1) return;
+        fullItemRef.current.forEach((item) => {
+            // todo wont always be max
+            if (item.item === ammoType.item && tryReloadWeapon(ammoType.item, true)) {
+                item.cAmmo = ammoType.maxAmmo
+                item.mAmmo = ammoType.maxAmmo
+            }
+        })
+        return true;
+    }
 
-
-                        // update main table
-                        // todo: wont always be max
-                        topLevel[1][selIdx].cAmmo = ammoType.maxAmmo
-                        topLevel[1][selIdx].mAmmo = ammoType.maxAmmo
-
-
-                        // This probably shouldn't happen here but it works
-                        if (equippedItem.equipped === weaponType) {
-                            equippedItem.cAmmo = topLevel[1][selIdx].cAmmo
-                            equippedItem.mAmmo = topLevel[1][selIdx].mAmmo
-                        }
-                    }
+    const handleTryEquip = () => {
+        if (inventory[inventoryIndex]?.item === equippedItem.equipped) {
+            equippedItem.equipped = null
+        } else {
+            fullItemRef.current.forEach((item) => {
+                if (item.item === inventory[inventoryIndex].item) {
+                    equippedItem.equipped = item.item
+                    equippedItem.cAmmo = item.cAmmo
+                    equippedItem.mAmmo = item.mAmmo
+                    return;
                 }
             })
-        });
-        return true;
+        }
     }
 
     useEffect(() => {
@@ -142,34 +136,12 @@ export const PlayerMenuUI = () => {
                                 forceUpdate(v => v + 1)
                             },
                             equipUnequip: () => {
-                                if (inventory[inventoryIndex]?.item === equippedItem.equipped) {
-                                    equippedItem.equipped = null
-                                } else {
-                                    let selectedItem;
-                                    const itemAsArr = Object.entries(ITEM_TABLE);
-                                    itemAsArr.forEach((topLevel) => {
-                                        topLevel[1].forEach((item) => {
-                                            if (item.item === inventory[inventoryIndex].item) {
-                                                selectedItem = item;
-                                                return;
-                                            }
-                                        })
-                                    })
-
-                                    if (!selectedItem) return;
-
-                                    equippedItem.equipped = selectedItem.item
-                                    equippedItem.cAmmo = selectedItem.cAmmo
-                                    equippedItem.mAmmo = selectedItem.mAmmo
-                                }
+                                handleTryEquip()
 
                                 setContextOpen(false)
                                 forceUpdate(v => v + 1)
                             },
                             tryReloadGun: () => {
-                                // try find ammo
-                                // item im on
-                                // inventory[inventoryIndex].item
                                 if (tryFindAmmoAndWeapon(inventory[inventoryIndex].item)) {
                                     setContextOpen(false)
                                     forceUpdate(v => v + 1)
@@ -298,8 +270,7 @@ export const PlayerMenuUI = () => {
                                     >
 
                                         {
-                                            isItemEquipped(fullInventory[inventoryIndex].item) &&
-                                                equippedItem.equipped === fullInventory[inventoryIndex].item &&
+                                            equippedItem.equipped === fullInventory[inventoryIndex].item &&
                                                 op.label === "Equip" ? "Unequip" : op.label}
                                         {/* {op.label} */}
                                     </div>
