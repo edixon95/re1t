@@ -1,8 +1,8 @@
 import * as THREE from "three";
 import { itemMeshes } from "../managers/ItemManager";
-import { tryAddInventory } from "./Inventory";
 import { triggerPickupText } from "../UI/InformationalUI";
-import { ITEM_TABLE } from "../data/itemTable";
+import { useItemStore } from "../stores/useItemStore";
+import { useInventoryStore } from "../stores/useInventoryStore";
 
 const interactionRaycaster = new THREE.Raycaster();
 const interactionDirection = new THREE.Vector3();
@@ -12,17 +12,15 @@ export const tryInteract = (player, level) => {
     const origin = player.position.clone();
     const CONE_ANGLE = Math.PI / 4;
     const INTERACT_DISTANCE = 0.75;
-    const PICKUP_RADIUS = 0.25; // radius for items under
+    const PICKUP_RADIUS = 0.25;
 
-    // ---- 1️⃣ DOOR CHECK FIRST ----
     const doorDirection = new THREE.Vector3(0, 0, -1)
         .applyEuler(player.rotation)
         .normalize();
 
     interactionRaycaster.set(origin, doorDirection);
-    interactionRaycaster.far = 1.2; // slightly longer than player reach
+    interactionRaycaster.far = 1.2;
 
-    // Raycast against all children in scene
     const scene = player.parent;
     if (scene) {
         const doorHits = interactionRaycaster.intersectObjects(scene.children, true);
@@ -33,14 +31,12 @@ export const tryInteract = (player, level) => {
                         detail: hit.object.userData.door,
                     })
                 );
-                return; // stop here, door interaction wins
+                return;
             }
         }
     }
 
-    // ---- 2️⃣ ITEM CHECK ----
     const meshes = itemMeshes.map(ref => ref.current).filter(Boolean);
-    // remove early return so doors aren't blocked
     let hitItem = null;
     let nearestDistance = Infinity;
 
@@ -78,15 +74,17 @@ export const tryInteract = (player, level) => {
         }
     }
 
-    if (!hitItem)
-        return;
-
+    if (!hitItem) return;
 
     if (hitItem.userData.type === "item") {
-        const item = ITEM_TABLE[level].find((x) => x.item === hitItem.userData.item)
+        const item = useItemStore
+            .getState()
+            .itemTable[level]
+            .find((x) => x.item === hitItem.userData.item);
+
         if (!item) return;
 
-        if (!!tryAddInventory(hitItem.userData)) {
+        if (!!useInventoryStore.getState().tryAddInventory(hitItem.userData)) {
             item.isCollected = true;
             triggerPickupText(hitItem.userData);
             hitItem.parent.remove(hitItem);

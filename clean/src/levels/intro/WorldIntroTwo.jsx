@@ -4,13 +4,13 @@ import { PropManager } from "../../managers/PropManager"
 import { ItemManager } from "../../managers/ItemManager"
 import { DoorManager } from "../../managers/DoorManager"
 import { DOOR_TABLE } from "../../data/doorTable"
-import { ITEM_TABLE } from "../../data/itemTable"
+import { useItemStore } from "../../stores/useItemStore"
 
 export const WorldIntroTwo = () => {
     // Different corridor layout + color
     const floors = [
-        { position: [0, 0, 0], size: [12, 4], color: "#666" }, // long horizontal
-        { position: [5, 0, -4], size: [4, 8], color: "#666" }, // downward arm
+        { position: [0, 0, 0], size: [12, 4], color: "#666" },
+        { position: [5, 0, -4], size: [4, 8], color: "#666" },
     ]
 
     // Props rearranged
@@ -22,6 +22,9 @@ export const WorldIntroTwo = () => {
 
     const floorRefs = floors.map(() => useRef())
 
+    // 👉 read introTwo items from Zustand
+    const introTwoItems = useItemStore((state) => state.itemTable.introTwo)
+
     return (
         <>
             {/* Lighting feels moodier */}
@@ -30,10 +33,10 @@ export const WorldIntroTwo = () => {
                 return (
                     <spotLight
                         key={`light-${i}`}
-                        position={[x, 4, z]}      // height above corridor
+                        position={[x, 4, z]}
                         target-position={[x, 0, z]}
                         intensity={1.2}
-                        angle={Math.PI / 6}       // narrow beam
+                        angle={Math.PI / 6}
                         penumbra={0.2}
                         distance={6}
                         decay={2}
@@ -60,7 +63,7 @@ export const WorldIntroTwo = () => {
 
             <WallManager floors={floors} />
             <PropManager props={props} />
-            <ItemManager items={ITEM_TABLE["introTwo"]} />
+            <ItemManager items={introTwoItems} />
             <DoorManager doors={DOOR_TABLE["introTwo"]} />
         </>
     )

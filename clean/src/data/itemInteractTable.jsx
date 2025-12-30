@@ -69,7 +69,13 @@ export const ITEM_INTERACT_TABLE = {
             {
                 label: "Examine",
                 action: ({ openExamine }) => {
-                    openExamine("A keycard")
+                    openExamine("A keycard, looks kinda tasty")
+                }
+            },
+            {
+                label: "Eat",
+                action: ({ consumeItem }) => {
+                    consumeItem()
                 }
             }
         ]

@@ -4,13 +4,13 @@ import { PropManager } from "../../managers/PropManager";
 import { ItemManager } from "../../managers/ItemManager";
 import { DoorManager } from "../../managers/DoorManager";
 import { DOOR_TABLE } from "../../data/doorTable";
-import { ITEM_TABLE } from "../../data/itemTable";
+import { useItemStore } from "../../stores/useItemStore";
 
 export const WorldIntro = () => {
     // Define floors
     const floors = [
-        { position: [4, 0, 0], size: [10, 4], color: "#999" }, // horizontal arm
-        { position: [-3, 0, 3], size: [4, 10], color: "#999" }, // vertical arm
+        { position: [4, 0, 0], size: [10, 4], color: "#999" },
+        { position: [-3, 0, 3], size: [4, 10], color: "#999" },
     ];
 
     const props = [
@@ -21,19 +21,21 @@ export const WorldIntro = () => {
     // Store floor meshes in an array for debugging or raycasting
     const floorRefs = floors.map(() => useRef());
 
+    // 👉 read intro items from Zustand
+    const introItems = useItemStore((state) => state.itemTable.intro);
+
     return (
         <>
-
             {floors.map((floor, i) => {
                 const [x, , z] = floor.position;
 
                 return (
                     <spotLight
                         key={`light-${i}`}
-                        position={[x, 4, z]}      // height above corridor
+                        position={[x, 4, z]}
                         target-position={[x, 0, z]}
                         intensity={1.2}
-                        angle={Math.PI / 6}       // narrow beam
+                        angle={Math.PI / 6}
                         penumbra={0.2}
                         distance={6}
                         decay={2}
@@ -60,9 +62,8 @@ export const WorldIntro = () => {
 
             <WallManager floors={floors} />
             <PropManager props={props} />
-            <ItemManager items={ITEM_TABLE["intro"]} />
+            <ItemManager items={introItems} />
             <DoorManager doors={DOOR_TABLE["intro"]} />
-
         </>
     );
 };
