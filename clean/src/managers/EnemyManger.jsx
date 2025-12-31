@@ -1,36 +1,34 @@
 import { useFrame } from "@react-three/fiber";
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { shallow } from "zustand/shallow";
 import * as THREE from "three";
 import { useEnemyStore } from "../stores/useEnemyStores";
 import { LEVEL_TABLE } from "../data/levelTabel";
-import { canMove } from "../helpers/canMove";
 import { wallMeshes } from "./WallManager";
 import { propMeshes } from "./PropManager";
+import { createGrid, findPath } from "../helpers/pathfinding";
 
 const EMPTY_ARRAY = [];
 export const liveEnemyRefs = [];
 
-const ROTATION_PAUSE = 0.5; // seconds pause after picking a new patrol target
-const PLAYER_CHECK_INTERVAL = 2; // seconds to move toward last seen player
+const PLAYER_CHECK_INTERVAL = 1;
 
 export const EnemyManager = ({ gameState, player }) => {
     const enemies =
-        useEnemyStore(
-            (state) => state.enemiesByLevel[gameState.level],
-            shallow
-        ) ?? EMPTY_ARRAY;
+        useEnemyStore((state) => state.enemiesByLevel[gameState.level], shallow) ??
+        EMPTY_ARRAY;
 
     const level = LEVEL_TABLE[gameState.level];
-    const enemyTargetsRef = useRef([]);
-    const pauseTimersRef = useRef([]);
-    const playerTargetTimersRef = useRef([]);
+    const enemyPathsRef = useRef([]);
+    const enemyTargetIndexRef = useRef([]);
+    const lastPathUpdateRef = useRef([]);
+    const [grid, setGrid] = useState(null);
 
-    // --- Helper: pick a valid patrol position inside floor
-    const pickPatrolPosition = (floor) => {
+    const pickPatrolPosition = () => {
+        if (!level || level.world.length === 0) return [0, 0.5, 0];
+        const floor = level.world[Math.floor(Math.random() * level.world.length)];
         const [fx, fy, fz] = floor.position;
         const [fw, fd] = floor.size;
-
         return [
             fx - fw / 2 + Math.random() * fw,
             fy + 0.5,
@@ -38,12 +36,35 @@ export const EnemyManager = ({ gameState, player }) => {
         ];
     };
 
-    useFrame((_, delta) => {
-        if (!level || enemies.length === 0) return;
-        if (!player?.current) return;
+    useEffect(() => {
+        if (!level) return;
+        const obstacles = [...wallMeshes, ...propMeshes].map(r => r.current).filter(Boolean);
 
-        const floor = level.world[0];
-        if (!floor) return;
+        if (level.world.length === 0) return;
+
+        // bounding box
+        let minX = Infinity, minZ = Infinity, maxX = -Infinity, maxZ = -Infinity, y = 0;
+        level.world.forEach(f => {
+            const [fx, fy, fz] = f.position;
+            const [fw, fd] = f.size;
+            y = fy;
+            minX = Math.min(minX, fx - fw / 2);
+            maxX = Math.max(maxX, fx + fw / 2);
+            minZ = Math.min(minZ, fz - fd / 2);
+            maxZ = Math.max(maxZ, fz + fd / 2);
+        });
+
+        const combinedFloor = {
+            position: [(minX + maxX) / 2, y, (minZ + maxZ) / 2],
+            size: [maxX - minX, maxZ - minZ],
+        };
+
+        const g = createGrid(combinedFloor, obstacles, 0.5);
+        if (g) setGrid(g);
+    }, [level]);
+
+    useFrame((_, delta) => {
+        if (!level || enemies.length === 0 || !player?.current || !grid?.grid) return;
 
         const playerPos = new THREE.Vector3();
         player.current.getWorldPosition(playerPos);
@@ -52,100 +73,67 @@ export const EnemyManager = ({ gameState, player }) => {
             const ref = liveEnemyRefs[i];
             if (!ref || !enemy.isAlive) return;
 
-            let chasingPlayer = false;
+            const lastUpdate = lastPathUpdateRef.current[i] || 0;
+            lastPathUpdateRef.current[i] = lastUpdate + delta;
+            const recalcPath = lastPathUpdateRef.current[i] >= PLAYER_CHECK_INTERVAL;
+            if (recalcPath) lastPathUpdateRef.current[i] = 0;
 
-            // --- PLAYER DETECTION ---
-            if (!enemyTargetsRef.current[i]?.isPlayerTarget) {
-                const forwardToPlayer = playerPos.clone().sub(ref.position).normalize();
-                const distanceToPlayer = playerPos.clone().sub(ref.position).length();
+            if (!enemyPathsRef.current[i]?.isPlayerTarget) {
+                const dirToPlayer = playerPos.clone().sub(ref.position).normalize();
+                const distToPlayer = playerPos.clone().sub(ref.position).length();
 
-                // Combine walls and props for line-of-sight
-                const obstacles = [...wallMeshes, ...propMeshes]
-                    .map((ref) => ref.current)
-                    .filter(Boolean);
+                const obstacles = [...wallMeshes, ...propMeshes].map(r => r.current).filter(Boolean);
+                const ray = new THREE.Raycaster(ref.position.clone(), dirToPlayer, 0, distToPlayer);
+                const hits = ray.intersectObjects(obstacles.concat(player.current), false);
 
-                const raycaster = new THREE.Raycaster(ref.position.clone(), forwardToPlayer, 0, distanceToPlayer);
-                const hits = raycaster.intersectObjects(obstacles.concat(player.current), false);
-
-                // If the first hit is the player, enemy can see
-                if (hits.length > 0 && hits[0].object === player.current) {
-                    enemyTargetsRef.current[i] = {
-                        pos: [playerPos.x, ref.position.y, playerPos.z],
-                        isPlayerTarget: true,
-                    };
-                    playerTargetTimersRef.current[i] = PLAYER_CHECK_INTERVAL;
-                    chasingPlayer = true;
-                    console.log(`Enemy ${enemy.id} sees player!`);
+                if (hits.length > 0 && hits[0].object === player.current && recalcPath) {
+                    const path = findPath(grid, ref.position, playerPos);
+                    if (path.length > 0) {
+                        enemyPathsRef.current[i] = { path, isPlayerTarget: true };
+                        enemyTargetIndexRef.current[i] = 0;
+                    }
                 }
             }
 
-            // --- UPDATE PLAYER TARGET ---
-            if (enemyTargetsRef.current[i]?.isPlayerTarget) {
-                chasingPlayer = true;
-
-                // Continuously update target toward player
-                enemyTargetsRef.current[i].pos = [playerPos.x, ref.position.y, playerPos.z];
-
-                if (playerTargetTimersRef.current[i] > 0) {
-                    playerTargetTimersRef.current[i] -= delta;
+            if (enemyPathsRef.current[i]?.isPlayerTarget && recalcPath) {
+                const path = findPath(grid, ref.position, playerPos);
+                if (path.length > 0) {
+                    enemyPathsRef.current[i].path = path;
+                    enemyTargetIndexRef.current[i] = 0;
                 } else {
-                    // Lost player → resume patrol
-                    enemyTargetsRef.current[i] = null;
-                    playerTargetTimersRef.current[i] = 0;
-                    console.log(`Enemy ${enemy.id} lost player, resuming patrol`);
+                    enemyPathsRef.current[i] = null;
                 }
             }
 
-            // --- PATROLLING ---
-            if (!enemyTargetsRef.current[i]) {
-                const patrolPos = pickPatrolPosition(floor);
-                enemyTargetsRef.current[i] = {
-                    pos: patrolPos,
-                    isPlayerTarget: false,
-                };
-                pauseTimersRef.current[i] = ROTATION_PAUSE;
-                console.log(`Enemy ${enemy.id} picks new patrol target`);
+            if (!enemyPathsRef.current[i]) {
+                const patrolPos = pickPatrolPosition();
+                const path = findPath(grid, ref.position, patrolPos);
+                if (path.length > 0) {
+                    enemyPathsRef.current[i] = { path, isPlayerTarget: false };
+                    enemyTargetIndexRef.current[i] = 0;
+                }
             }
 
-            const target = enemyTargetsRef.current[i].pos;
-            const dx = target[0] - ref.position.x;
-            const dz = target[2] - ref.position.z;
-            const distance = Math.hypot(dx, dz);
+            const path = enemyPathsRef.current[i]?.path;
+            const idx = enemyTargetIndexRef.current[i] ?? 0;
+            if (!path || path.length === 0 || idx >= path.length) return;
 
-            if (distance < 0.2) {
-                enemyTargetsRef.current[i] = null;
-                pauseTimersRef.current[i] = undefined;
-                console.log(`Enemy ${enemy.id} reached target`);
-                return;
-            }
+            const node = path[idx];
+            if (!node || isNaN(node.x) || isNaN(node.z)) return;
 
-            // snap rotation
-            ref.rotation.y = Math.atan2(dx, dz);
+            const target = new THREE.Vector3(node.x, ref.position.y, node.z);
+            const dir = target.clone().sub(ref.position);
+            const distance = dir.length();
 
-            // Countdown pause timer
-            if (!enemyTargetsRef.current[i]?.isPlayerTarget && pauseTimersRef.current[i] > 0) {
-                pauseTimersRef.current[i] -= delta;
-                return;
-            }
-
-            // --- MOVE TOWARD TARGET (world-space direction) ---
-            const moveDistance = Math.min(enemy.speed * delta, distance);
-            const direction = new THREE.Vector3(target[0], ref.position.y, target[2])
-                .sub(ref.position)
-                .normalize();
-
-            if (canMove(ref.position, ref.rotation, direction, moveDistance)) {
-                ref.position.add(direction.multiplyScalar(moveDistance));
-            } else if (!enemyTargetsRef.current[i]?.isPlayerTarget) {
-                enemyTargetsRef.current[i] = null;
-                pauseTimersRef.current[i] = ROTATION_PAUSE;
-                console.log(`Enemy ${enemy.id} blocked, picking new patrol target`);
-            }
-
-            if (chasingPlayer) {
-                console.log(`Enemy ${enemy.id} moving toward player`);
+            if (distance < 0.1) {
+                enemyTargetIndexRef.current[i] += 1;
             } else {
-                console.log(`Enemy ${enemy.id} patrolling`);
+                dir.normalize();
+                ref.position.add(dir.multiplyScalar(Math.min(enemy.speed * delta, distance)));
+
+                const targetY = Math.atan2(dir.x, dir.z);
+                const deltaY = ((targetY - ref.rotation.y + Math.PI) % (2 * Math.PI)) - Math.PI;
+                ref.rotation.y += deltaY * 0.1;
             }
         });
     });
@@ -153,9 +141,9 @@ export const EnemyManager = ({ gameState, player }) => {
     if (!level || enemies.length === 0) return null;
 
     liveEnemyRefs.length = enemies.length;
-    enemyTargetsRef.current.length = enemies.length;
-    pauseTimersRef.current.length = enemies.length;
-    playerTargetTimersRef.current.length = enemies.length;
+    enemyPathsRef.current.length = enemies.length;
+    enemyTargetIndexRef.current.length = enemies.length;
+    lastPathUpdateRef.current.length = enemies.length;
 
     return (
         <>
