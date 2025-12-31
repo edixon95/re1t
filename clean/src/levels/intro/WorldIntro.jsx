@@ -5,18 +5,14 @@ import { ItemManager } from "../../managers/ItemManager";
 import { DoorManager } from "../../managers/DoorManager";
 import { DOOR_TABLE } from "../../data/doorTable";
 import { useItemStore } from "../../stores/useItemStore";
+import { LEVEL_TABLE } from "../../data/levelTabe";
 
 export const WorldIntro = () => {
     // Define floors
-    const floors = [
-        { position: [4, 0, 0], size: [10, 4], color: "#999" },
-        { position: [-3, 0, 3], size: [4, 10], color: "#999" },
-    ];
 
-    const props = [
-        { position: [2, 0.5, 0], size: [1, 1, 1] },
-        { position: [-2, 0.5, 3], size: [2, 1, 0.5] },
-    ];
+    const floors = LEVEL_TABLE["intro"].world
+    const props = LEVEL_TABLE["intro"].props
+
 
     // Store floor meshes in an array for debugging or raycasting
     const floorRefs = floors.map(() => useRef());
