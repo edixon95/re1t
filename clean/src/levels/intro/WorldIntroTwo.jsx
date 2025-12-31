@@ -8,17 +8,8 @@ import { useItemStore } from "../../stores/useItemStore"
 
 export const WorldIntroTwo = () => {
     // Different corridor layout + color
-    const floors = [
-        { position: [0, 0, 0], size: [12, 4], color: "#666" },
-        { position: [5, 0, -4], size: [4, 8], color: "#666" },
-    ]
-
-    // Props rearranged
-    const props = [
-        { position: [1, 0.5, -0.8], size: [1, 1.2, 1] },
-        { position: [4, 0.5, -3], size: [0.5, 1, 2] },
-        { position: [6, 0.5, -6], size: [1, 1, 1] },
-    ]
+    const floors = LEVEL_TABLE["introTwo"].world
+    const props = LEVEL_TABLE["introTwo"].props
 
     const floorRefs = floors.map(() => useRef())
 
