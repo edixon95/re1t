@@ -5,6 +5,12 @@ export const WEAPON_TABLE = {
         critical: 0,
         name: "Knife"
     },
+    Gun: {
+        damage: 1,
+        range: 5,
+        critical: 0,
+        name: "Gun"
+    },
     Colt: {
         damage: 1,
         range: 5,
