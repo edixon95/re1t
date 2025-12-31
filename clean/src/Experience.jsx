@@ -26,7 +26,7 @@ export const Experience = () => {
 
             {/* Player */}
             <Player playerRef={playerRef} level={gameState.level} />
-            <EnemyManager gameState={gameState} />
+            <EnemyManager gameState={gameState} player={playerRef} />
 
             {/* Camera system */}
             <CameraManager

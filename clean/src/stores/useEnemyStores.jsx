@@ -7,6 +7,7 @@ export const useEnemyStore = create((set) => ({
             {
                 id: "introTwo-0",
                 position: [-3, 0.5, 0.6],
+                unspawnedAt: [],
                 type: "Basic",
                 health: ENEMY_TABLE.Basic.health,
                 speed: ENEMY_TABLE.Basic.speed,
