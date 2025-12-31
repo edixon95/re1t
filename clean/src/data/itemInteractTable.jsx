@@ -4,14 +4,12 @@ export const ITEM_INTERACT_TABLE = {
             {
                 label: "Equip",
                 action: ({ equipUnequip }) => {
-                    console.log("Equipped Gun")
                     equipUnequip()
                 }
             },
             {
                 label: "Reload",
                 action: ({ tryReloadGun }) => {
-                    console.log("Reloaded Gun")
                     tryReloadGun()
                 }
             },
@@ -28,14 +26,12 @@ export const ITEM_INTERACT_TABLE = {
             {
                 label: "Equip",
                 action: ({ equipUnequip }) => {
-                    console.log("Equipped Gun")
                     equipUnequip()
                 }
             },
             {
                 label: "Reload",
                 action: ({ tryReloadGun }) => {
-                    console.log("Reloaded Gun")
                     tryReloadGun()
                 }
             },
@@ -52,7 +48,6 @@ export const ITEM_INTERACT_TABLE = {
             {
                 label: "Reload Gun",
                 action: ({ tryUseAmmo }) => {
-                    console.log("Reloaded Gun")
                     tryUseAmmo()
                 }
             },

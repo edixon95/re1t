@@ -4,10 +4,12 @@ import { useEffect, useRef, useState } from "react";
 
 import { canMove } from "../helpers/canMove";
 import { tryInteract } from "./tryInteract";
+import { useInventoryStore } from "../stores/useInventoryStore";
+import { tryAttackEnemy } from "./tryAttackEnemy";
+import { useEnemyStore } from "../stores/useEnemyStores";
 
 export const menuOpenRef = { current: false }; // lock inputs
 export const isTransition = { current: false }; // Lock but no menu
-export const equippedItem = { equipped: null, cAmmo: null, mAmmo: null }
 
 export const Player = ({ playerRef, level }) => {
   const aimingRef = useRef(false); // is aiming
@@ -16,6 +18,11 @@ export const Player = ({ playerRef, level }) => {
   const prevTabKeyRef = useRef(false); // local menu track
 
   const [aiming, setAiming] = useState(false);
+  const tryGetWeaponInformation = useInventoryStore((state) => state.tryGetWeaponInformation);
+  const equippedItem = useInventoryStore(state => state.equippedItem);
+  const consumeAmmo = useInventoryStore(state => state.consumeAmmo);
+  const damageEnemy = useEnemyStore(state => state.damageEnemy);
+
 
   useEffect(() => {
     window.keys = {};
@@ -51,10 +58,42 @@ export const Player = ({ playerRef, level }) => {
     if (spacePressed && !prevSpaceKeyRef.current) {
       if (aimingRef.current) {
         // SHOOT
-        console.log("Player shoots");
+        console.log("Player attempts shoot");
+
+        const handleCanPlayerShoot = (weapon) => {
+          const weaponInfo = tryGetWeaponInformation(weapon);
+          if (weaponInfo.name === "Knife") {
+            return {
+              canShoot: true,
+              weaponInfo,
+              useAmmo: false
+            }
+          } else {
+            return {
+              canShoot: equippedItem.cAmmo > 0,
+              weaponInfo,
+              useAmmo: true
+            }
+          }
+        }
+
+        const shouldCalculate = handleCanPlayerShoot(equippedItem.equipped)
+        if (!shouldCalculate.canShoot) {
+          console.log("Player cannot attack")
+        } else {
+          console.log("calculate attack")
+          if (shouldCalculate.useAmmo) {
+            console.log("use ammo")
+            consumeAmmo()
+          }
+
+          const tEnemy = tryAttackEnemy(playerRef.current, shouldCalculate.weaponInfo);
+          if (tEnemy) {
+            damageEnemy(level, tEnemy.userData.enemyId, shouldCalculate.weaponInfo.damage)
+          }
+        }
       } else {
         // INTERACT
-        console.log("Player interacts");
         tryInteract(playerRef.current, level)
       }
     }

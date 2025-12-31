@@ -25,15 +25,13 @@ export const useItemStore = create((set, get) => ({
       )
     })),
 
-  // DONT USE THIS YET
-  updateAmmo: (itemName, cAmmo, mAmmo) =>
-    set(state => ({
-      itemTable: Object.fromEntries(
-        Object.entries(state.itemTable).map(([level, items]) => [
-          level,
-          items.map(i => i.item === itemName ? { ...i, cAmmo, mAmmo } : i)
-        ])
-      )
-    }))
+  updateItemAmmo: (levelKey, itemName, cAmmo, mAmmo) => {
+    const table = get().itemTable;
+    const levelItems = table[levelKey] || [];
+    const newLevelItems = levelItems.map(i =>
+      i.item === itemName ? { ...i, cAmmo, mAmmo } : i
+    );
+    set({ itemTable: { ...table, [levelKey]: newLevelItems } });
+  },
 
 }));
