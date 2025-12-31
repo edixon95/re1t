@@ -11,7 +11,6 @@ import { propMeshes } from "./PropManager";
 const EMPTY_ARRAY = [];
 export const liveEnemyRefs = [];
 
-// 🔧 CONFIG
 const ROTATION_PAUSE = 0.5; // seconds pause after picking a new patrol target
 const PLAYER_CHECK_INTERVAL = 2; // seconds to move toward last seen player
 
@@ -120,10 +119,10 @@ export const EnemyManager = ({ gameState, player }) => {
                 return;
             }
 
-            // 🔥 SNAP ROTATION (visual only)
+            // snap rotation
             ref.rotation.y = Math.atan2(dx, dz);
 
-            // Countdown pause timer (only for patrol)
+            // Countdown pause timer
             if (!enemyTargetsRef.current[i]?.isPlayerTarget && pauseTimersRef.current[i] > 0) {
                 pauseTimersRef.current[i] -= delta;
                 return;
