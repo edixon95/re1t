@@ -5,7 +5,7 @@ import { ItemManager } from "../../managers/ItemManager";
 import { DoorManager } from "../../managers/DoorManager";
 import { DOOR_TABLE } from "../../data/doorTable";
 import { useItemStore } from "../../stores/useItemStore";
-import { LEVEL_TABLE } from "../../data/levelTabe";
+import { LEVEL_TABLE } from "../../data/levelTabel";
 
 export const WorldIntro = () => {
     // Define floors
