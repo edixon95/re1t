@@ -3,6 +3,7 @@ import { isTransition, Player } from "./Player/Player";
 import { CameraManager } from "./managers/CameraManager";
 import { WorldManager } from "./managers/WorldManager";
 import { TransitionManager, TransitionScreen } from "./managers/TransitionManager";
+import { EnemyManager } from "./managers/EnemyManger";
 
 export const Experience = () => {
     const playerRef = useRef();
@@ -25,6 +26,7 @@ export const Experience = () => {
 
             {/* Player */}
             <Player playerRef={playerRef} level={gameState.level} />
+            <EnemyManager gameState={gameState} />
 
             {/* Camera system */}
             <CameraManager
