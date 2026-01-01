@@ -5,6 +5,7 @@ import { AMMO_TABLE } from "../data/ammoTable"
 import { WEAPON_TABLE } from "../data/weaponTable"
 import { useItemStore } from "./useItemStore"
 import { CONSUME_TABLE } from "../data/consumeTable"
+import { stingometer } from "../helpers/stingometer"
 
 export const useInventoryStore = create((set, get) => ({
     inventory: Array(12).fill(null),
@@ -34,6 +35,13 @@ export const useInventoryStore = create((set, get) => ({
         for (let i = 0; i < inventory.length; i++) {
             if (inventory[i] === null) {
                 const newInventory = [...inventory]
+                console.log(item)
+
+                const allItems = useItemStore.getState().getAllItems();
+                const thisItem = allItems.find((x) => x.item === item.item)
+                if (thisItem?.mAmmo)
+                    item.mAmmo = thisItem.mAmmo
+
                 newInventory[i] = item
                 set({ inventory: newInventory })
                 return item.item
@@ -155,9 +163,7 @@ export const useInventoryStore = create((set, get) => ({
         if (ammoIdx === -1) return false;
 
         const newInventory = [...inventory];
-
-        // TODO - CALCULATE AMMO BY DIFFICULTY
-        newInventory[weaponIdx] = { ...newInventory[weaponIdx], cAmmo: ammoType.maxAmmo, mAmmo: ammoType.maxAmmo };
+        newInventory[weaponIdx] = { ...newInventory[weaponIdx], cAmmo: stingometer(1, ammoType.maxAmmo) };
 
         const ammoSlot = { ...newInventory[ammoIdx] };
         if (ammoSlot.stackable && ammoSlot.amount > 1) {
