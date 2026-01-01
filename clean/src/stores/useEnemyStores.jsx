@@ -25,7 +25,6 @@ export const useEnemyStore = create((set) => ({
 
                     const health = enemy.health - damage
 
-                    console.log("hp", health)
                     return {
                         ...enemy,
                         health,

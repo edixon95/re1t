@@ -12,24 +12,34 @@ export const menuOpenRef = { current: false }; // lock inputs
 export const isTransition = { current: false }; // Lock but no menu
 
 export const Player = ({ playerRef, level }) => {
-  const aimingRef = useRef(false); // is aiming
-  const prevAimKeyRef = useRef(false); // toggle aim
-  const prevSpaceKeyRef = useRef(false); // track space
-  const prevTabKeyRef = useRef(false); // local menu track
+  const aimingRef = useRef(false);
+  const prevAimKeyRef = useRef(false);
+  const prevSpaceKeyRef = useRef(false);
+  const prevTabKeyRef = useRef(false);
+
+  const nextShootTimeRef = useRef(0);
+
+  const muzzleLightRef = useRef(null);
+  const muzzleTimeoutRef = useRef(null);
 
   const [aiming, setAiming] = useState(false);
-  const tryGetWeaponInformation = useInventoryStore((state) => state.tryGetWeaponInformation);
-  const equippedItem = useInventoryStore(state => state.equippedItem);
-  const consumeAmmo = useInventoryStore(state => state.consumeAmmo);
-  const damageEnemy = useEnemyStore(state => state.damageEnemy);
 
+  const tryGetWeaponInformation = useInventoryStore(
+    (state) => state.tryGetWeaponInformation
+  );
+  const equippedItem = useInventoryStore((state) => state.equippedItem);
+  const consumeAmmo = useInventoryStore((state) => state.consumeAmmo);
+
+  const damageEnemy = useEnemyStore((state) => state.damageEnemy);
 
   useEffect(() => {
     window.keys = {};
     const handleKeyDown = (e) => (window.keys[e.code] = true);
     const handleKeyUp = (e) => (window.keys[e.code] = false);
+
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
+
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
@@ -38,116 +48,146 @@ export const Player = ({ playerRef, level }) => {
 
   const direction = useRef(new THREE.Vector3());
 
-  useFrame((_, delta) => {
+  const triggerMuzzleFlash = () => {
+    if (!muzzleLightRef.current) return;
+
+    muzzleLightRef.current.intensity = 5;
+
+    if (muzzleTimeoutRef.current) {
+      clearTimeout(muzzleTimeoutRef.current);
+    }
+
+    muzzleTimeoutRef.current = setTimeout(() => {
+      if (muzzleLightRef.current) {
+        muzzleLightRef.current.intensity = 0;
+      }
+    }, 50);
+  };
+
+  useFrame((state, delta) => {
     if (!playerRef?.current) return;
+    if (isTransition.current) return;
 
-    if (isTransition.current) return; // Shouldn't be able to do anything if in transition
+    const currentTime = state.clock.elapsedTime;
 
+    // MENU TOGGLE
     const tabPressed = !!window.keys["KeyQ"];
-
     if (tabPressed && !prevTabKeyRef.current) {
       menuOpenRef.current = !menuOpenRef.current;
     }
-
     prevTabKeyRef.current = tabPressed;
+    if (menuOpenRef.current) return;
 
-    if (menuOpenRef.current) return; // Can't do inputs if menu is open
-
+    // SPACE ACTION
     const spacePressed = !!window.keys["Space"];
 
     if (spacePressed && !prevSpaceKeyRef.current) {
       if (aimingRef.current) {
-        // SHOOT
-        console.log("Player attempts shoot");
+        const weaponInfo = tryGetWeaponInformation(
+          equippedItem.equipped
+        );
 
-        const handleCanPlayerShoot = (weapon) => {
-          const weaponInfo = tryGetWeaponInformation(weapon);
-          if (weaponInfo.name === "Knife") {
-            return {
-              canShoot: true,
-              weaponInfo,
-              useAmmo: false
+        // FIRE RATE CHECK
+        if (currentTime >= nextShootTimeRef.current) {
+          const isKnife = weaponInfo.name === "Knife";
+          const canShoot = isKnife || equippedItem.cAmmo > 0;
+
+          if (canShoot) {
+            nextShootTimeRef.current =
+              currentTime + weaponInfo.delay;
+
+            if (!isKnife) {
+              consumeAmmo();
+              triggerMuzzleFlash();
             }
-          } else {
-            return {
-              canShoot: equippedItem.cAmmo > 0,
-              weaponInfo,
-              useAmmo: true
+
+            const tEnemy = tryAttackEnemy(
+              playerRef.current,
+              weaponInfo
+            );
+
+            if (tEnemy) {
+              damageEnemy(
+                level,
+                tEnemy.userData.enemyId,
+                weaponInfo.damage
+              );
             }
-          }
-        }
-
-        const shouldCalculate = handleCanPlayerShoot(equippedItem.equipped)
-        if (!shouldCalculate.canShoot) {
-          console.log("Player cannot attack")
-        } else {
-          console.log("calculate attack")
-          if (shouldCalculate.useAmmo) {
-            console.log("use ammo")
-            consumeAmmo()
-          }
-
-          const tEnemy = tryAttackEnemy(playerRef.current, shouldCalculate.weaponInfo);
-          if (tEnemy) {
-            damageEnemy(level, tEnemy.userData.enemyId, shouldCalculate.weaponInfo.damage)
           }
         }
       } else {
-        // INTERACT
-        tryInteract(playerRef.current, level)
+        tryInteract(playerRef.current, level);
       }
     }
+
     prevSpaceKeyRef.current = spacePressed;
 
-    // Movement start
+    // MOVEMENT
     const rotationSpeed = 2;
-
     let speed = 2;
-    // You can't sprint backwards
+
     if (window.keys["ShiftLeft"] && !window.keys["KeyS"]) {
       speed = 3;
     }
 
     const moveDistance = speed * delta;
 
-    // Determine rotation direction multiplier
     let rotationMultiplier = 1;
     if (window.keys["KeyS"] && !aimingRef.current) {
-      rotationMultiplier = -1; // Reverse rotation when moving backward
+      rotationMultiplier = -1;
     }
 
-    // Rotation
-    if (window.keys["KeyA"]) playerRef.current.rotation.y += rotationSpeed * delta * rotationMultiplier;
-    if (window.keys["KeyD"]) playerRef.current.rotation.y -= rotationSpeed * delta * rotationMultiplier;
+    if (window.keys["KeyA"]) {
+      playerRef.current.rotation.y +=
+        rotationSpeed * delta * rotationMultiplier;
+    }
 
-    // Aiming
+    if (window.keys["KeyD"]) {
+      playerRef.current.rotation.y -=
+        rotationSpeed * delta * rotationMultiplier;
+    }
+
+    // AIM TOGGLE
     const aimKeyPressed = !!window.keys["ControlLeft"];
 
-    // Toggle aiming
     if (aimKeyPressed && !prevAimKeyRef.current) {
       aimingRef.current = !aimingRef.current;
       setAiming(aimingRef.current);
     }
+
     prevAimKeyRef.current = aimKeyPressed;
 
-    // Can't move forward or backward while aiming
+    // MOVEMENT (NO MOVE WHILE AIMING)
     if (!aimingRef.current) {
       direction.current.set(0, 0, -1);
       if (window.keys["KeyW"]) {
-        if (canMove(playerRef.current.position, playerRef.current.rotation, direction.current, moveDistance)) {
+        if (
+          canMove(
+            playerRef.current.position,
+            playerRef.current.rotation,
+            direction.current,
+            moveDistance
+          )
+        ) {
           playerRef.current.translateZ(-moveDistance);
         }
       }
 
       direction.current.set(0, 0, 1);
       if (window.keys["KeyS"]) {
-        if (canMove(playerRef.current.position, playerRef.current.rotation, direction.current, moveDistance)) {
+        if (
+          canMove(
+            playerRef.current.position,
+            playerRef.current.rotation,
+            direction.current,
+            moveDistance
+          )
+        ) {
           playerRef.current.translateZ(moveDistance);
         }
       }
     }
   });
-
 
   return (
     <mesh
@@ -159,10 +199,22 @@ export const Player = ({ playerRef, level }) => {
       <boxGeometry args={[0.5, 1, 0.5]} />
       <meshStandardMaterial color="red" />
 
+      {/* Aim Indicator */}
       <mesh position={[0, 0, -0.6]}>
         <boxGeometry args={[0.15, 0.15, 0.15]} />
-        <meshStandardMaterial color={aiming ? "red" : "yellow"} />
+        <meshStandardMaterial
+          color={aiming ? "red" : "yellow"}
+        />
       </mesh>
+
+      {/* Muzzle Flash Light */}
+      <pointLight
+        ref={muzzleLightRef}
+        position={[0, 0, -0.8]}
+        intensity={0}
+        distance={3}
+        color="orange"
+      />
     </mesh>
   );
 };

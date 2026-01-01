@@ -6,7 +6,6 @@ const directionVector = new THREE.Vector3();
 
 export const tryAttackEnemy = (player, weaponInfo) => {
     if (!player || !weaponInfo) return false;
-    console.log(liveEnemyRefs)
 
     const validEnemies = liveEnemyRefs.filter(ref => ref);
     if (validEnemies.length === 0) return false;
