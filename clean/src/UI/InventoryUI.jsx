@@ -5,10 +5,12 @@ export const InventoryWindow = ({
     inventory,
     style,
     combineSourceIndex = null,
-    validCombineTargets = []
+    validCombineTargets = [],
+    containerRef
 }) => {
     return (
         <div
+            ref={containerRef}
             style={{
                 ...style,
                 display: style?.display || "grid",
@@ -18,22 +20,17 @@ export const InventoryWindow = ({
                 width: "100%",
                 height: "100%",
                 boxSizing: "border-box",
+                position: "relative"
             }}
         >
             {inventory.map((slot, i) => {
                 const isSelected = focused && i === selectedIndex;
                 const isCombineSource = i === combineSourceIndex;
-
                 const isValidTarget =
                     combineSourceIndex !== null &&
                     slot &&
                     validCombineTargets.includes(slot.item) &&
                     i !== combineSourceIndex;
-
-                // Dim everything except:
-                // - selected slot
-                // - combine source
-                // - valid targets
                 const isDimmed =
                     combineSourceIndex !== null &&
                     !isSelected &&
@@ -57,17 +54,17 @@ export const InventoryWindow = ({
                             fontWeight: "bold",
                             boxSizing: "border-box",
                             position: "relative",
-                            transition: "opacity 0.15s ease"
+                            transition: "opacity 0.15s ease",
                         }}
                     >
                         {slot?.mAmmo != null && (
-                            <div style={{ position: "absolute", top: 10, left: 10, fontSize: 14 }}>
-                                {slot.cAmmo} / {slot.mAmmo}
+                            <div style={{ position: "absolute", bottom: 10, right: 10, fontSize: 14 }}>
+                                {slot.cAmmo ?? 0} / {slot.mAmmo}
                             </div>
                         )}
 
                         {equipped?.equipped === slot?.item && (
-                            <div style={{ position: "absolute", top: 30, left: 10, fontSize: 12 }}>
+                            <div style={{ position: "absolute", bottom: 10, left: 10, fontSize: 12 }}>
                                 Equipped
                             </div>
                         )}
@@ -76,8 +73,6 @@ export const InventoryWindow = ({
                     </div>
                 );
             })}
-
-
         </div>
     );
 };

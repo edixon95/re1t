@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { DOOR_TABLE } from "../data/doorTable";
 import { useInventoryStore } from "../stores/useInventoryStore";
-import { isTransition } from "../Player/Player"; // existing ref
+import { isTransition } from "../Player/Player";
 import { interactionAttempt, interactionSuccess } from "../UI/InformationalUI";
 
 
@@ -17,16 +17,16 @@ export const TransitionManager = (playerRef, setGameState, isTransitionRef) => {
 
         if (fromDoor.requiredItem && !fromDoor.isUnlocked) {
             const used = useInventoryStore.getState().tryUseInventoryItemDoor(
-                fromDoor.requiredItem,   // requestedItem
-                fromDoor.isAnonymous,    // isAnonymous
-                fromDoor.isKeySingle,    // isSingleUse
-                fromDoor.id              // usedOnDoorId
+                fromDoor.requiredItem,
+                fromDoor.isAnonymous,
+                fromDoor.isKeySingle,
+                fromDoor.id
             );
 
 
             if (!used) {
                 interactionAttempt(fromDoor.isAnonymous, fromDoor.requiredItem)
-                return; // cannot open door
+                return;
             }
 
             interactionSuccess(fromDoor.requiredItem)
@@ -75,7 +75,7 @@ export const TransitionScreen = () => {
     useEffect(() => {
         const interval = setInterval(() => {
             setVisible(isTransition.current);
-        }, 16); // ~60fps
+        }, 16);
 
         return () => clearInterval(interval);
     }, []);

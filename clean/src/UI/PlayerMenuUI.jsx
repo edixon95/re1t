@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useInventoryStore } from "../stores/useInventoryStore";
 import { useItemStore } from "../stores/useItemStore";
 import { menuOpenRef } from "../Player/Player";
@@ -11,6 +11,9 @@ const INVENTORY_ROWS = 3;
 const TOTAL_SLOTS = INVENTORY_COLUMNS * INVENTORY_ROWS;
 
 export const PlayerMenuUI = () => {
+
+    const inventoryRef = useRef(null);
+    const [contextStyle, setContextStyle] = useState({});
     const [open, setOpen] = useState(menuOpenRef.current);
     const [focus, setFocus] = useState("menu");
     const [menuIndex, setMenuIndex] = useState(0);
@@ -102,6 +105,34 @@ export const PlayerMenuUI = () => {
             setCombineSourceIndex(null);
         }
     }, [open]);
+
+    useEffect(() => {
+        if (!contextOpen) {
+            setContextStyle({});
+            return;
+        }
+
+        if (!inventoryRef.current) return;
+
+        const container = inventoryRef.current;
+        const slot = container.children[inventoryIndex];
+        if (!slot) return;
+
+        const rect = slot.getBoundingClientRect();
+        const parentRect = container.getBoundingClientRect();
+
+        setContextStyle({
+            position: "absolute",
+            top: rect.top - parentRect.top + 5,
+            left: rect.left - parentRect.left + 5,
+            background: "black",
+            border: "2px solid white",
+            padding: "10px",
+            zIndex: 1000,
+        });
+    }, [contextOpen, inventoryIndex]);
+
+
 
     useEffect(() => {
         const onKeyDown = (e) => {
@@ -216,15 +247,17 @@ export const PlayerMenuUI = () => {
                     <>
                         <InventoryWindow
                             selectedIndex={inventoryIndex}
-                            focused={focus === "content" && !contextOpen}
+                            focused={focus === "content"}
                             inventory={fullInventory}
                             equipped={equippedItem}
                             combineSourceIndex={combineSourceIndex}
                             validCombineTargets={validCombineTargets}
+                            containerRef={inventoryRef} // added
                         />
 
+
                         {contextOpen && fullInventory[inventoryIndex] && (
-                            <div style={{ position: "absolute", right: "10%", top: "20%", background: "black", border: "2px solid white", padding: 10 }}>
+                            <div style={contextStyle}>
                                 {ITEM_INTERACT_TABLE[fullInventory[inventoryIndex].item].Options.map((op, i) => (
                                     <div key={op.label} style={{ color: i === contextIndex ? "yellow" : "white", padding: "4px 8px" }}>
                                         {equippedItem.equipped === fullInventory[inventoryIndex].item && op.label === "Equip"
@@ -234,6 +267,7 @@ export const PlayerMenuUI = () => {
                                 ))}
                             </div>
                         )}
+
                     </>
                 )}
 

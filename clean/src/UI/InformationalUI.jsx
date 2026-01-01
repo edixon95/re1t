@@ -27,19 +27,17 @@ export const interactionSuccess = (item) => {
 export const InformationalUI = () => {
     const [text, setText] = useState("")
     const [visible, setVisible] = useState(false)
-    const timeoutRef = useRef(null) // Store the timeout ID
+    const timeoutRef = useRef(null)
 
     useEffect(() => {
         triggerFn = (message) => {
             setText(message)
             setVisible(true)
 
-            // Clear previous timeout if it exists
             if (timeoutRef.current) {
                 clearTimeout(timeoutRef.current)
             }
 
-            // Auto-hide after 5.5s
             timeoutRef.current = setTimeout(() => {
                 setVisible(false)
                 timeoutRef.current = null
