@@ -80,10 +80,9 @@ export const tryInteract = (player, level) => {
         const item = useItemStore
             .getState()
             .itemTable[level]
-            .find((x) => x.item === hitItem.userData.item);
+            .find((x) => x.id === hitItem.userData.id);
 
         if (!item) return;
-
         if (!!useInventoryStore.getState().tryAddInventory(hitItem.userData)) {
             item.isCollected = true;
             triggerPickupText(hitItem.userData);

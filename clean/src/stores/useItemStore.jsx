@@ -3,14 +3,14 @@ import { create } from "zustand";
 export const useItemStore = create((set, get) => ({
   itemTable: {
     intro: [
-      { position: [2, 0.25, 0.8], size: [0.3, 0.3, 0.3], item: "Herb", pickedUp: false },
-      { position: [2, 0.25, 0.8], size: [0.3, 0.3, 0.3], item: "Herb", pickedUp: false },
-      { position: [-3, 0.25, 3], size: [0.3, 0.3, 0.3], item: "KeyCard", pickedUp: false }
+      { position: [2, 0.25, 0.8], size: [0.3, 0.3, 0.3], item: "Herb", pickedUp: false, id: "intro_herb_01" },
+      { position: [2, 0.25, 0.8], size: [0.3, 0.3, 0.3], item: "Herb", pickedUp: false, id: "intro_herb_02" },
+      { position: [-3, 0.25, 3], size: [0.3, 0.3, 0.3], item: "KeyCard", pickedUp: false, id: "intro_keycard_01" }
     ],
     introTwo: [
-      { position: [3, 0.25, 0.6], size: [0.3, 0.3, 0.3], item: "Colt", cAmmo: 0, mAmmo: 10, pickedUp: false },
-      { position: [6, 0.25, -5], size: [0.3, 0.3, 0.3], item: "Blue KeyCard", pickedUp: false },
-      { position: [2, 0.25, 0.8], size: [0.3, 0.3, 0.3], item: "Colt Ammo", pickedUp: false }
+      { position: [3, 0.25, 0.6], size: [0.3, 0.3, 0.3], item: "Colt", cAmmo: 0, mAmmo: 10, pickedUp: false, id: "introTwo_colt_01" },
+      { position: [6, 0.25, -5], size: [0.3, 0.3, 0.3], item: "Blue KeyCard", pickedUp: false, id: "introTwo_blueKeyCard_01" },
+      { position: [2, 0.25, 0.8], size: [0.3, 0.3, 0.3], item: "Colt Ammo", pickedUp: false, id: "introTwo_coltAmmo_01" }
     ]
   },
 

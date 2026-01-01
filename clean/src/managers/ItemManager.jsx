@@ -19,6 +19,7 @@ export const ItemManager = ({ items }) => {
                         userData={{
                             type: "item",
                             item: item.item,
+                            id: item.id
                         }}
                     >
                         <boxGeometry args={item.size} />
