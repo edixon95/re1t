@@ -35,12 +35,20 @@ export const useInventoryStore = create((set, get) => ({
         for (let i = 0; i < inventory.length; i++) {
             if (inventory[i] === null) {
                 const newInventory = [...inventory]
-                console.log(item)
 
                 const allItems = useItemStore.getState().getAllItems();
-                const thisItem = allItems.find((x) => x.item === item.item)
-                if (thisItem?.mAmmo)
+                const thisItem = allItems.find((x) => x.id === item.id)
+                if (thisItem?.mAmmo) {
+                    // If it's a weapon, set the max ammo
                     item.mAmmo = thisItem.mAmmo
+                    // TODO: Tweak
+                    // Weapons have a chance to start with ammo
+                    if (stingometer(1, 10) >= 0) {
+                        item.cAmmo = stingometer(1, thisItem.mAmmo)
+                    } else {
+                        item.cAmmo = 0
+                    }
+                }
 
                 newInventory[i] = item
                 set({ inventory: newInventory })
@@ -162,8 +170,12 @@ export const useInventoryStore = create((set, get) => ({
         const ammoIdx = inventory.findIndex(x => x?.item === ammoType.item);
         if (ammoIdx === -1) return false;
 
+
         const newInventory = [...inventory];
-        newInventory[weaponIdx] = { ...newInventory[weaponIdx], cAmmo: stingometer(1, ammoType.maxAmmo) };
+        const ammoFromPack = stingometer(ammoType.minAmmo, ammoType.maxAmmo);
+        const ammoTotal = Math.min(newInventory[weaponIdx].cAmmo + ammoFromPack, ammoType.maxAmmo);
+
+        newInventory[weaponIdx] = { ...newInventory[weaponIdx], cAmmo: ammoTotal };
 
         const ammoSlot = { ...newInventory[ammoIdx] };
         if (ammoSlot.stackable && ammoSlot.amount > 1) {
@@ -173,7 +185,7 @@ export const useInventoryStore = create((set, get) => ({
             newInventory[ammoIdx] = null;
         }
 
-        set({ inventory: newInventory, equippedItem: { ...get().equippedItem, cAmmo: ammoType.maxAmmo, mAmmo: ammoType.maxAmmo } });
+        set({ inventory: newInventory, equippedItem: { ...get().equippedItem, cAmmo: ammoTotal } });
 
     },
 
