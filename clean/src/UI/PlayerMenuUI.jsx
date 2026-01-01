@@ -20,13 +20,11 @@ export const PlayerMenuUI = () => {
     const [contextIndex, setContextIndex] = useState(0);
     const [examineText, setExamineText] = useState(null);
 
-    // 🔥 Combine mode
     const [combineSourceIndex, setCombineSourceIndex] = useState(null);
 
     const menuOptions = ["Inventory", "Map", "Options"];
     const activeMenu = menuOptions[menuIndex];
 
-    // Zustand
     const inventory = useInventoryStore(state => state.inventory);
     const equippedItem = useInventoryStore(state => state.equippedItem);
     const equipItem = useInventoryStore(state => state.equipItem);
@@ -71,7 +69,7 @@ export const PlayerMenuUI = () => {
 
     const attemptCombine = () => {
         if (combineSourceIndex === null) return;
-        if (combineSourceIndex === inventoryIndex) return; // ❌ same slot
+        if (combineSourceIndex === inventoryIndex) return;
 
         const sourceSlot = fullInventory[combineSourceIndex];
         const targetSlot = fullInventory[inventoryIndex];
@@ -127,16 +125,13 @@ export const PlayerMenuUI = () => {
                 const slot = fullInventory[inventoryIndex];
                 const col = inventoryIndex % INVENTORY_COLUMNS;
 
-                // 🔥 Combine mode input
                 if (combineSourceIndex !== null) {
-                    // Confirm combine
                     if (key === " ") {
                         if (slot && validCombineTargets.includes(slot.item)) {
                             attemptCombine();
                         }
                     }
 
-                    // Cancel combine (Ctrl)
                     if (key === "control" || key === "ctrl") {
                         setCombineSourceIndex(null);
                     }
@@ -145,7 +140,7 @@ export const PlayerMenuUI = () => {
 
                 // Context menu
                 if (contextOpen) {
-                    if (examineText) return; // 🔒 Examine owns input
+                    if (examineText) return;
 
                     if (!slot) {
                         setContextOpen(false);

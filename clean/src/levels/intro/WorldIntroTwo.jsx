@@ -8,18 +8,14 @@ import { useItemStore } from "../../stores/useItemStore"
 import { LEVEL_TABLE } from "../../data/levelTabel"
 
 export const WorldIntroTwo = () => {
-    // Different corridor layout + color
     const floors = LEVEL_TABLE["introTwo"].world
     const props = LEVEL_TABLE["introTwo"].props
 
     const floorRefs = floors.map(() => useRef())
-
-    // 👉 read introTwo items from Zustand
     const introTwoItems = useItemStore((state) => state.itemTable.introTwo)
 
     return (
         <>
-            {/* Lighting feels moodier */}
             {floors.map((floor, i) => {
                 const [x, , z] = floor.position
                 return (

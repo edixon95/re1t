@@ -156,10 +156,9 @@ export const useInventoryStore = create((set, get) => ({
 
         const newInventory = [...inventory];
 
-        // refill weapon slot
+        // TODO - CALCULATE AMMO BY DIFFICULTY
         newInventory[weaponIdx] = { ...newInventory[weaponIdx], cAmmo: ammoType.maxAmmo, mAmmo: ammoType.maxAmmo };
 
-        // consume ammo slot
         const ammoSlot = { ...newInventory[ammoIdx] };
         if (ammoSlot.stackable && ammoSlot.amount > 1) {
             ammoSlot.amount -= 1;

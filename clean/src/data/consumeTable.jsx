@@ -1,4 +1,3 @@
-// data/consumeTable.js
 export const CONSUME_TABLE = {
     Herb: {
         type: "HEAL",

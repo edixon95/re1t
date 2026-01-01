@@ -40,7 +40,6 @@ export const InventoryWindow = ({
                     !isCombineSource &&
                     !isValidTarget;
 
-                // Border priority: Selected > Combine Source > Default
                 let borderColor = "white";
                 if (isCombineSource) borderColor = "cyan";
                 if (isSelected) borderColor = "yellow";
