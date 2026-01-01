@@ -2,7 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import { isTransition, Player } from "./Player/Player";
 import { CameraManager } from "./managers/CameraManager";
 import { WorldManager } from "./managers/WorldManager";
-import { TransitionManager, TransitionScreen } from "./managers/TransitionManager";
+import { TransitionManager } from "./managers/TransitionManager";
 import { EnemyManager } from "./managers/EnemyManger";
 
 export const Experience = () => {

@@ -8,16 +8,11 @@ import { useItemStore } from "../../stores/useItemStore";
 import { LEVEL_TABLE } from "../../data/levelTabel";
 
 export const WorldIntro = () => {
-    // Define floors
-
     const floors = LEVEL_TABLE["intro"].world
     const props = LEVEL_TABLE["intro"].props
 
-
-    // Store floor meshes in an array for debugging or raycasting
     const floorRefs = floors.map(() => useRef());
 
-    // 👉 read intro items from Zustand
     const introItems = useItemStore((state) => state.itemTable.intro);
 
     return (
@@ -42,7 +37,6 @@ export const WorldIntro = () => {
 
             <ambientLight intensity={1.2} />
 
-            {/* Render floors */}
             {floors.map((floor, i) => (
                 <mesh
                     key={i}

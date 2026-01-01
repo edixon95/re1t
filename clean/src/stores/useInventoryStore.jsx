@@ -4,6 +4,7 @@ import { interactionAttempt, interactionSuccess } from "../UI/InformationalUI"
 import { AMMO_TABLE } from "../data/ammoTable"
 import { WEAPON_TABLE } from "../data/weaponTable"
 import { useItemStore } from "./useItemStore"
+import { CONSUME_TABLE } from "../data/consumeTable"
 
 export const useInventoryStore = create((set, get) => ({
     inventory: Array(12).fill(null),
@@ -42,15 +43,41 @@ export const useInventoryStore = create((set, get) => ({
         return false
     },
 
-    consumeItem: (itemName) => {
-        const { inventory } = get()
-        const idx = inventory.findIndex(x => x?.item === itemName)
-        if (idx === -1) return false
+    consumeItemByIndex: (index) => {
+        const { inventory } = get();
 
-        const newInventory = [...inventory]
-        newInventory[idx] = null
-        set({ inventory: newInventory })
-        return true
+        if (!inventory[index]) return false;
+
+        const newInventory = [...inventory];
+        newInventory[index] = null;
+
+        set({ inventory: newInventory });
+        return true;
+    },
+
+    useItemByIndex: (index) => {
+        const { inventory } = get();
+        const slot = inventory[index];
+        if (!slot) return false;
+
+        const entry = CONSUME_TABLE[slot.item];
+        if (!entry) return false;
+
+        // Use stuff here
+        // switch (entry.type) {
+        //     case "HEAL":
+        //         get().healPlayer(entry.amount);
+        //         break;
+
+        //     default:
+        //         return false;
+        // }
+
+        const newInventory = [...inventory];
+        newInventory[index] = null;
+        set({ inventory: newInventory });
+
+        return true;
     },
 
     equipItem: (itemData) => {
@@ -129,10 +156,9 @@ export const useInventoryStore = create((set, get) => ({
 
         const newInventory = [...inventory];
 
-        // refill weapon slot
+        // TODO - CALCULATE AMMO BY DIFFICULTY
         newInventory[weaponIdx] = { ...newInventory[weaponIdx], cAmmo: ammoType.maxAmmo, mAmmo: ammoType.maxAmmo };
 
-        // consume ammo slot
         const ammoSlot = { ...newInventory[ammoIdx] };
         if (ammoSlot.stackable && ammoSlot.amount > 1) {
             ammoSlot.amount -= 1;
@@ -143,6 +169,22 @@ export const useInventoryStore = create((set, get) => ({
 
         set({ inventory: newInventory, equippedItem: { ...get().equippedItem, cAmmo: ammoType.maxAmmo, mAmmo: ammoType.maxAmmo } });
 
+    },
+
+    craftItemsByIndex: (idxA, idxB, resultItem) => {
+        if (idxA === idxB) return false;
+
+        const { inventory } = get();
+
+        if (!inventory[idxA] || !inventory[idxB]) return false;
+
+        const newInventory = [...inventory];
+
+        newInventory[idxA] = null;
+        newInventory[idxB] = { item: resultItem };
+
+        set({ inventory: newInventory });
+        return true;
     },
 
     tryUseInventoryItemDoor: (requestedItem, isAnonymous, isSingleUse, usedOnDoorId) => {
