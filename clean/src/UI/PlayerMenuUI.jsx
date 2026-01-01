@@ -4,7 +4,7 @@ import { useItemStore } from "../stores/useItemStore";
 import { menuOpenRef } from "../Player/Player";
 import { InventoryWindow } from "./InventoryUI";
 import { ITEM_INTERACT_TABLE } from "../data/itemInteractTable";
-import { AMMO_TABLE } from "../data/ammoTable";
+import { resolveCombine, getValidCombineTargets } from "../helpers/getValidCombineTargets";
 
 const INVENTORY_COLUMNS = 4;
 const INVENTORY_ROWS = 3;
@@ -15,9 +15,13 @@ export const PlayerMenuUI = () => {
     const [focus, setFocus] = useState("menu");
     const [menuIndex, setMenuIndex] = useState(0);
     const [inventoryIndex, setInventoryIndex] = useState(0);
+
     const [contextOpen, setContextOpen] = useState(false);
     const [contextIndex, setContextIndex] = useState(0);
     const [examineText, setExamineText] = useState(null);
+
+    // 🔥 Combine mode
+    const [combineSourceIndex, setCombineSourceIndex] = useState(null);
 
     const menuOptions = ["Inventory", "Map", "Options"];
     const activeMenu = menuOptions[menuIndex];
@@ -26,7 +30,7 @@ export const PlayerMenuUI = () => {
     const inventory = useInventoryStore(state => state.inventory);
     const equippedItem = useInventoryStore(state => state.equippedItem);
     const equipItem = useInventoryStore(state => state.equipItem);
-    const tryReloadWeapon = useInventoryStore(state => state.tryReloadWeapon);
+    const useItemByIndex = useInventoryStore(state => state.useItemByIndex);
 
     const itemTable = useItemStore(state => state.itemTable);
 
@@ -40,15 +44,13 @@ export const PlayerMenuUI = () => {
         [inventory]
     );
 
-    const tryFindAmmoAndWeapon = (weaponName) => {
-        const ammoType = AMMO_TABLE[weaponName];
-        if (!ammoType) return false;
+    const combineSourceItem =
+        combineSourceIndex !== null ? fullInventory[combineSourceIndex]?.item : null;
 
-        const ammoSlot = inventory.find(x => x?.item === ammoType.item);
-        if (!ammoSlot) return false;
-
-        return tryReloadWeapon(weaponName);
-    };
+    const validCombineTargets = useMemo(() => {
+        if (!combineSourceItem) return [];
+        return getValidCombineTargets(combineSourceItem);
+    }, [combineSourceItem]);
 
     const handleTryEquip = () => {
         const slot = fullInventory[inventoryIndex];
@@ -62,6 +64,32 @@ export const PlayerMenuUI = () => {
         }
     };
 
+    const beginCombine = () => {
+        setCombineSourceIndex(inventoryIndex);
+        setContextOpen(false);
+    };
+
+    const attemptCombine = () => {
+        if (combineSourceIndex === null) return;
+        if (combineSourceIndex === inventoryIndex) return; // ❌ same slot
+
+        const sourceSlot = fullInventory[combineSourceIndex];
+        const targetSlot = fullInventory[inventoryIndex];
+        if (!sourceSlot || !targetSlot) return;
+
+        const success = resolveCombine(
+            sourceSlot.item,
+            targetSlot.item,
+            combineSourceIndex,
+            inventoryIndex
+        );
+
+        if (success !== false) {
+            setCombineSourceIndex(null);
+        }
+    };
+
+
     useEffect(() => {
         const interval = setInterval(() => {
             if (menuOpenRef.current !== open) setOpen(menuOpenRef.current);
@@ -73,6 +101,7 @@ export const PlayerMenuUI = () => {
         if (!open) {
             setContextOpen(false);
             setExamineText(null);
+            setCombineSourceIndex(null);
         }
     }, [open]);
 
@@ -81,7 +110,11 @@ export const PlayerMenuUI = () => {
             if (!open) return;
             const key = e.key.toLowerCase();
 
-            if (examineText && (key === " " || key === "a")) return setExamineText(null);
+            if (examineText && (key === "control" || key === "ctrl")) {
+                setExamineText(null);
+                return;
+            }
+
 
             if (focus === "menu") {
                 if (key === "w") setMenuIndex(i => Math.max(0, i - 1));
@@ -94,34 +127,62 @@ export const PlayerMenuUI = () => {
                 const slot = fullInventory[inventoryIndex];
                 const col = inventoryIndex % INVENTORY_COLUMNS;
 
+                // 🔥 Combine mode input
+                if (combineSourceIndex !== null) {
+                    // Confirm combine
+                    if (key === " ") {
+                        if (slot && validCombineTargets.includes(slot.item)) {
+                            attemptCombine();
+                        }
+                    }
+
+                    // Cancel combine (Ctrl)
+                    if (key === "control" || key === "ctrl") {
+                        setCombineSourceIndex(null);
+                    }
+                }
+
+
+                // Context menu
                 if (contextOpen) {
-                    if (!slot) return setContextOpen(false);
+                    if (examineText) return; // 🔒 Examine owns input
+
+                    if (!slot) {
+                        setContextOpen(false);
+                        return;
+                    }
 
                     const options = ITEM_INTERACT_TABLE[slot.item]?.Options ?? [];
+
                     if (key === "w") setContextIndex(i => Math.max(0, i - 1));
                     if (key === "s") setContextIndex(i => Math.min(options.length - 1, i + 1));
+
                     if (key === " ") {
                         const option = options[contextIndex];
                         option?.action({
                             openExamine: setExamineText,
-                            closeContext: () => setContextOpen(false),
-                            consumeItem: () => useInventoryStore.getState().consumeItem(slot.item),
                             equipUnequip: handleTryEquip,
-                            tryReloadGun: () => {
-                                if (tryFindAmmoAndWeapon(slot.item)) setContextOpen(false);
-                            },
+                            consumeItem: () => useItemByIndex(inventoryIndex),
+                            beginCombine
                         });
                     }
-                    if (key === "a") setContextOpen(false);
+
+                    if (key === "control" || key === "ctrl") {
+                        setContextOpen(false);
+                    }
+
                     return;
                 }
 
+
+                // Movement
                 if (key === "a") col === 0 ? setFocus("menu") : setInventoryIndex(i => i - 1);
                 if (key === "d") setInventoryIndex(i => Math.min(TOTAL_SLOTS - 1, i + 1));
                 if (key === "w") setInventoryIndex(i => Math.max(0, i - INVENTORY_COLUMNS));
                 if (key === "s") setInventoryIndex(i => Math.min(TOTAL_SLOTS - 1, i + INVENTORY_COLUMNS));
 
-                if (key === " " && slot && ITEM_INTERACT_TABLE[slot.item]) {
+                // Open context
+                if (key === " " && slot && ITEM_INTERACT_TABLE[slot.item] && combineSourceIndex === null) {
                     setContextOpen(true);
                     setContextIndex(0);
                 }
@@ -130,7 +191,18 @@ export const PlayerMenuUI = () => {
 
         window.addEventListener("keydown", onKeyDown);
         return () => window.removeEventListener("keydown", onKeyDown);
-    }, [open, focus, menuIndex, inventoryIndex, contextOpen, contextIndex, examineText, fullInventory, allItems]);
+    }, [
+        open,
+        focus,
+        menuIndex,
+        inventoryIndex,
+        contextOpen,
+        contextIndex,
+        examineText,
+        combineSourceIndex,
+        validCombineTargets,
+        fullInventory
+    ]);
 
     if (!open) return null;
 
@@ -152,10 +224,11 @@ export const PlayerMenuUI = () => {
                             focused={focus === "content" && !contextOpen}
                             inventory={fullInventory}
                             equipped={equippedItem}
-                            style={{ display: activeMenu === "Inventory" ? "grid" : "none" }}
+                            combineSourceIndex={combineSourceIndex}
+                            validCombineTargets={validCombineTargets}
                         />
 
-                        {contextOpen && fullInventory[inventoryIndex] && ITEM_INTERACT_TABLE[fullInventory[inventoryIndex].item] && (
+                        {contextOpen && fullInventory[inventoryIndex] && (
                             <div style={{ position: "absolute", right: "10%", top: "20%", background: "black", border: "2px solid white", padding: 10 }}>
                                 {ITEM_INTERACT_TABLE[fullInventory[inventoryIndex].item].Options.map((op, i) => (
                                     <div key={op.label} style={{ color: i === contextIndex ? "yellow" : "white", padding: "4px 8px" }}>
@@ -172,7 +245,7 @@ export const PlayerMenuUI = () => {
                 {examineText && (
                     <div style={{ position: "absolute", inset: "20%", background: "black", border: "2px solid white", padding: 20, fontSize: "20px" }}>
                         {examineText}
-                        <div style={{ marginTop: 20, color: "gray" }}>Press A or Space to close</div>
+                        <div style={{ marginTop: 20, color: "gray" }}>Press CTRL to close</div>
                     </div>
                 )}
 
