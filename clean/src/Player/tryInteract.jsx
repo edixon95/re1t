@@ -77,15 +77,17 @@ export const tryInteract = (player, level) => {
     if (!hitItem) return;
 
     if (hitItem.userData.type === "item") {
-        const item = useItemStore
-            .getState()
-            .itemTable[level]
-            .find((x) => x.id === hitItem.userData.id);
+        const itemStore = useItemStore.getState();
+        const inventoryStore = useInventoryStore.getState();
 
+        const item = itemStore.itemTable[level]?.find(x => x.id === hitItem.userData.id);
         if (!item) return;
-        if (!!useInventoryStore.getState().tryAddInventory(hitItem.userData)) {
-            item.isCollected = true;
+
+        // Try to add to inventory
+        if (!!inventoryStore.tryAddInventory(hitItem.userData)) {
+            itemStore.pickUpItem(hitItem.userData.id);
             triggerPickupText(hitItem.userData);
+
             hitItem.parent.remove(hitItem);
 
             const refIndex = itemMeshes.findIndex(ref => ref.current === hitItem);
