@@ -18,5 +18,19 @@ export const COMBINE_TABLE = {
             type: "CRAFT",
             result: "HerbHerb"
         }
+    },
+
+    Uzi: {
+        "Uzi Ammo": {
+            type: "RELOAD",
+            weapon: "Uzi"
+        }
+    },
+
+    "Uzi Ammo": {
+        Uzi: {
+            type: "RELOAD",
+            weapon: "Uzi"
+        }
     }
 };

@@ -8,5 +8,10 @@ export const AMMO_TABLE = {
         item: "Colt Ammo",
         maxAmmo: 10,
         minAmmo: 2,
+    },
+    Uzi: {
+        item: "Uzi Ammo",
+        maxAmmo: 30,
+        minAmmo: 2
     }
 }

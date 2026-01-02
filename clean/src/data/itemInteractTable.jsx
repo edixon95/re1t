@@ -22,6 +22,21 @@ export const ITEM_INTERACT_TABLE = {
         ]
     },
 
+    Uzi: {
+        Options: [
+            { label: "Equip", action: ({ equipUnequip }) => equipUnequip() },
+            { label: "Combine", action: ({ beginCombine }) => beginCombine() },
+            { label: "Examine", action: ({ openExamine }) => openExamine("Turn it sideways for more damage") }
+        ]
+    },
+
+    "Uzi Ammo": {
+        Options: [
+            { label: "Combine", action: ({ beginCombine }) => beginCombine() },
+            { label: "Examine", action: ({ openExamine }) => openExamine("Bullets for an Uzi") }
+        ]
+    },
+
     Herb: {
         Options: [
             { label: "Use", action: ({ consumeItem }) => consumeItem() },

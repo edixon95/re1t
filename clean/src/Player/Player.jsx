@@ -89,46 +89,32 @@ export const Player = ({ playerRef, level }) => {
     // SPACE ACTION
     const spacePressed = !!window.keys["Space"];
 
-    if (spacePressed && !prevSpaceKeyRef.current) {
-      if (aimingRef.current) {
-        const weaponInfo = tryGetWeaponInformation(
-          equippedItem.equipped
-        );
+    if (aimingRef.current) {
+      if (spacePressed) {
+        const weaponInfo = tryGetWeaponInformation(equippedItem.equipped);
 
-        // FIRE RATE CHECK
         if (currentTime >= nextShootTimeRef.current) {
           const isKnife = weaponInfo.name === "Knife";
           const canShoot = isKnife || equippedItem.cAmmo > 0;
 
           if (canShoot) {
-            nextShootTimeRef.current =
-              currentTime + weaponInfo.delay;
+            nextShootTimeRef.current = currentTime + weaponInfo.delay;
 
             if (!isKnife) {
               consumeAmmo();
               triggerMuzzleFlash();
-
-              emitSound(
-                playerRef.current.position,
-                weaponInfo.soundLevel
-              );
+              emitSound(playerRef.current.position, weaponInfo.soundLevel);
             }
 
-            const tEnemy = tryAttackEnemy(
-              playerRef.current,
-              weaponInfo
-            );
-
+            const tEnemy = tryAttackEnemy(playerRef.current, weaponInfo);
             if (tEnemy) {
-              damageEnemy(
-                level,
-                tEnemy.userData.enemyId,
-                weaponInfo.damage
-              );
+              damageEnemy(level, tEnemy.userData.enemyId, weaponInfo.damage);
             }
           }
         }
-      } else {
+      }
+    } else {
+      if (spacePressed && !prevSpaceKeyRef.current) {
         tryInteract(playerRef.current, level);
       }
     }
