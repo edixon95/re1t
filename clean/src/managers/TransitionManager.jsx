@@ -3,10 +3,12 @@ import { DOOR_TABLE } from "../data/doorTable";
 import { useInventoryStore } from "../stores/useInventoryStore";
 import { isTransition } from "../Player/Player";
 import { interactionAttempt, interactionSuccess } from "../UI/InformationalUI";
-
+import { useEnemyStore } from "../stores/useEnemyStores";
+import { liveEnemyRefs } from "./EnemyManger";
 
 export const TransitionManager = (playerRef, setGameState, isTransitionRef) => {
     if (!playerRef || !setGameState) return;
+
 
     const handleDoorEnter = (e) => {
         const fromDoor = e.detail;
@@ -33,6 +35,10 @@ export const TransitionManager = (playerRef, setGameState, isTransitionRef) => {
         }
 
         if (isTransitionRef) isTransitionRef.current = true;
+
+        // Lazy add, not changing it
+        useEnemyStore.getState().saveEnemyPosition(fromDoor.self, liveEnemyRefs)
+
         setGameState((prev) => ({ ...prev, fade: true }));
 
         setTimeout(() => {

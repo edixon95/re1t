@@ -7,7 +7,6 @@ export const useEnemyStore = create((set) => ({
             {
                 id: "introTwo-0",
                 position: [-3, 0.5, 0.6],
-                unspawnedAt: [],
                 type: "Basic",
                 health: ENEMY_TABLE.Basic.health,
                 speed: ENEMY_TABLE.Basic.speed,
@@ -16,13 +15,44 @@ export const useEnemyStore = create((set) => ({
             {
                 id: "introTwo-1",
                 position: [-3, 0.5, 1],
-                unspawnedAt: [],
                 type: "Basic",
                 health: ENEMY_TABLE.Basic.health,
                 speed: ENEMY_TABLE.Basic.speed,
                 isAlive: true
             }
         ]
+    },
+
+    saveEnemyPosition: (level, liveEnemyRefs) => {
+        set((state) => {
+            const enemies = state.enemiesByLevel[level]
+
+            if (!enemies)
+                return state
+
+            if (!liveEnemyRefs || Object.keys(liveEnemyRefs).length === 0)
+                return state
+
+            return {
+                enemiesByLevel: {
+                    ...state.enemiesByLevel,
+                    [level]: enemies.map((enemy) => {
+                        const ref = Object.values(liveEnemyRefs).find(
+                            (r) => r?.userData?.enemyId === enemy.id
+                        )
+
+                        if (!ref || !enemy.isAlive) return enemy
+
+                        const pos = ref.position
+
+                        return {
+                            ...enemy,
+                            position: [pos.x, pos.y, pos.z]
+                        }
+                    })
+                }
+            }
+        })
     },
 
     damageEnemy: (level, enemyId, damage) => {
@@ -33,7 +63,6 @@ export const useEnemyStore = create((set) => ({
                     if (enemy.id !== enemyId) return enemy
 
                     const health = enemy.health - damage
-                    console.log(health)
                     return {
                         ...enemy,
                         health,
@@ -42,5 +71,5 @@ export const useEnemyStore = create((set) => ({
                 })
             }
         }))
-    }
+    },
 }))
