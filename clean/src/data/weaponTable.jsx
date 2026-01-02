@@ -11,13 +11,15 @@ export const WEAPON_TABLE = {
         range: 5,
         critical: 0,
         name: "Gun",
-        delay: 1
+        delay: 1,
+        soundLevel: 2
     },
     Colt: {
         damage: 1,
         range: 5,
         critical: 0,
         name: "Colt",
-        delay: 1
+        delay: 1,
+        soundLevel: 20
     }
 }
