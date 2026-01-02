@@ -3,7 +3,7 @@ export const DOOR_TABLE = {
         {
             id: "A_HALLWAY_EXIT",
             self: "intro",
-            position: [-3, 1, 7.85], // door mesh
+            position: [-3, 1, 7.85],
             size: [1, 2, 0.3],
             forward: [1, 0, 0],
             direction: 1,

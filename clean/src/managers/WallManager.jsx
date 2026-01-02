@@ -18,7 +18,7 @@ export const WallManager = ({ floors }) => {
                 const checkOverlap = (start, end, otherStart, otherEnd) =>
                     Math.max(start, otherStart) < Math.min(end, otherEnd);
 
-                // --- LEFT wall along Z ---
+                // LEFT wall along Z 
                 let leftSplits = [[fz - fd / 2, fz + fd / 2]];
                 floors.forEach((other, j) => {
                     if (j === idx) return;
@@ -57,7 +57,7 @@ export const WallManager = ({ floors }) => {
                     }
                 });
 
-                // --- RIGHT wall along Z ---
+                // RIGHT wall along Z
                 let rightSplits = [[fz - fd / 2, fz + fd / 2]];
                 floors.forEach((other, j) => {
                     if (j === idx) return;
@@ -94,7 +94,7 @@ export const WallManager = ({ floors }) => {
                     }
                 });
 
-                // --- TOP wall along X ---
+                // TOP wall along X
                 let topSplits = [[fx - fw / 2, fx + fw / 2]];
                 floors.forEach((other, j) => {
                     if (j === idx) return;
@@ -131,7 +131,7 @@ export const WallManager = ({ floors }) => {
                     }
                 });
 
-                // --- BOTTOM wall along X ---
+                // BOTTOM wall along X
                 let bottomSplits = [[fx - fw / 2, fx + fw / 2]];
                 floors.forEach((other, j) => {
                     if (j === idx) return;

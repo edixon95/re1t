@@ -22,11 +22,9 @@ export const useInventoryStore = create((set, get) => ({
 
     takeDamage: (amount) => {
         set((state) => {
-            console.log("amount", amount)
             const newHealth = Math.max(state.playerHealth - amount, 0);
-            console.log(`Player took ${amount} damage! Health: ${newHealth}`);
 
-            if (newHealth === 0) {
+            if (newHealth === 0) { // TODO: Death screen
                 menuOpenRef.current = true;
             }
             return { playerHealth: newHealth };
@@ -63,7 +61,6 @@ export const useInventoryStore = create((set, get) => ({
                 const allItems = useItemStore.getState().getAllItems();
                 const thisItem = allItems.find((x) => x.id === item.id)
                 if (thisItem?.mAmmo) {
-                    // If it's a weapon, set the max ammo
                     item.mAmmo = thisItem.mAmmo
                     // TODO: Tweak
                     // Weapons have a chance to start with ammo

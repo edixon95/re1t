@@ -32,10 +32,10 @@ export const EnemyManager = ({ gameState, player }) => {
     const enemyTargetIndexRef = useRef([]);
     const lastPathUpdateRef = useRef([]);
     const lostPlayerChecksRef = useRef([]);
-    const attackTimersRef = useRef([]); // NEW: for attack delays
+    const attackTimersRef = useRef([]);
 
     const [grid, setGrid] = useState(null);
-    const { takeDamage } = useInventoryStore.getState(); // get damage function
+    const { takeDamage } = useInventoryStore.getState();
 
     const pickPatrolPosition = () => {
         if (!level || !level.world.length) return new THREE.Vector3(0, 0.5, 0);
@@ -86,15 +86,12 @@ export const EnemyManager = ({ gameState, player }) => {
             const ref = liveEnemyRefs[i];
             if (!ref || !enemy.isAlive) return;
 
-            // Initialize attack timer if not exist
             if (!attackTimersRef.current[i]) {
                 attackTimersRef.current[i] = { delay: 0, attackTimer: 0, attacking: false };
             }
             const timer = attackTimersRef.current[i];
 
-            // -------------------------
             // PATHING & MOVEMENT
-            // -------------------------
             const lastUpdate = lastPathUpdateRef.current[i] || 0;
             lastPathUpdateRef.current[i] = lastUpdate + delta;
             const recalcPath = lastPathUpdateRef.current[i] >= PLAYER_CHECK_INTERVAL;
@@ -102,7 +99,7 @@ export const EnemyManager = ({ gameState, player }) => {
 
             const obstacles = [...wallMeshes, ...propMeshes].map(r => r.current).filter(Boolean);
 
-            // --- Player chase ---
+            // chase
             const dirToPlayer = playerPos.clone().sub(ref.position).normalize();
             const distToPlayer = playerPos.clone().sub(ref.position).length();
             const ray = new THREE.Raycaster(ref.position.clone(), dirToPlayer, 0, distToPlayer);
@@ -126,7 +123,7 @@ export const EnemyManager = ({ gameState, player }) => {
                 }
             }
 
-            // --- Sound investigation ---
+            // investigation
             if (!enemyPathsRef.current[i] || !enemyPathsRef.current[i]?.isPlayerTarget) {
                 for (const sound of soundEvents) {
                     if (ref.position.distanceTo(sound.position) <= sound.radius) {
@@ -146,7 +143,7 @@ export const EnemyManager = ({ gameState, player }) => {
                 }
             }
 
-            // --- Patrol ---
+            // patrol
             if (!enemyPathsRef.current[i]) {
                 const patrolPos = pickPatrolPosition();
                 const path = findPath(grid, ref.position, patrolPos);
@@ -156,7 +153,6 @@ export const EnemyManager = ({ gameState, player }) => {
                 }
             }
 
-            // --- Move along path with separation ---
             const path = enemyPathsRef.current[i]?.path;
             const idx = enemyTargetIndexRef.current[i] ?? 0;
             if (path && idx < path.length) {
@@ -200,7 +196,6 @@ export const EnemyManager = ({ gameState, player }) => {
             const inAttackRange = distToPlayer - 0.2 <= ENEMY_STOP_DISTANCE;
 
             if (inAttackRange) {
-                // counting attack delay first
                 if (!timer.attacking) {
                     timer.delay += delta;
 
