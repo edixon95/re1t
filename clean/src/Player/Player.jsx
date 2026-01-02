@@ -9,7 +9,7 @@ import { tryAttackEnemy } from "./tryAttackEnemy";
 import { useEnemyStore } from "../stores/useEnemyStores";
 import { emitSound } from "../sounds/SoundSystem";
 
-export const menuOpenRef = { current: false };
+export const menuOpenRef = { current: "mainMenu" };
 export const isTransition = { current: false };
 
 export const Player = ({ playerRef, level }) => {

@@ -5,14 +5,12 @@ import { menuOpenRef } from "../Player/Player";
 import { InventoryWindow } from "./InventoryUI";
 import { ITEM_INTERACT_TABLE } from "../data/itemInteractTable";
 import { resolveCombine, getValidCombineTargets } from "../helpers/getValidCombineTargets";
-import { savePlayerGame, loadPlayerGame } from "../helpers/loadSaveGame";
 
 const INVENTORY_COLUMNS = 4;
 const INVENTORY_ROWS = 3;
 const TOTAL_SLOTS = INVENTORY_COLUMNS * INVENTORY_ROWS;
 
-export const PlayerMenuUI = ({ playerRef }) => {
-    console.log(playerRef)
+export const PlayerMenuUI = () => {
     const inventoryRef = useRef(null);
     const [contextStyle, setContextStyle] = useState({});
     const [open, setOpen] = useState(menuOpenRef.current); // false | "ingameMenu" | "saveMenu" | "loadMenu"
@@ -42,9 +40,7 @@ export const PlayerMenuUI = ({ playerRef }) => {
 
     // Menu definitions
     const MENU_OPTIONS = {
-        ingameMenu: ["Inventory", "Map", "Options", "Save Game", "Load Game"],
-        saveMenu: Array(5).fill(null).map((_, i) => `Save Slot ${i + 1}`),
-        loadMenu: Array(5).fill(null).map((_, i) => `Load Slot ${i + 1}`),
+        ingameMenu: ["Inventory", "Map", "Options"], // removed Save/Load
     };
 
     const menuOptions = useMemo(() => {
@@ -142,13 +138,19 @@ export const PlayerMenuUI = ({ playerRef }) => {
             const key = e.key.toLowerCase();
 
             if (key === "control" || key === "ctrl") {
-                // Close any menu
-                menuOpenRef.current = false;
-                setOpen(false);
-                return;
+                if (examineText) {
+                    setExamineText(null);
+                } else if (contextOpen) {
+                    setContextOpen(false);
+                } else if (focus === "content") {
+                    setFocus("menu");
+                } else {
+                    menuOpenRef.current = false;
+                    setOpen(false);
+                }
             }
 
-            // Handle menu navigation
+
             if (focus === "menu") {
                 if (key === "w") setMenuIndex(i => Math.max(0, i - 1));
                 if (key === "s") setMenuIndex(i => Math.min(menuOptions.length - 1, i + 1));
@@ -156,33 +158,13 @@ export const PlayerMenuUI = ({ playerRef }) => {
                 if (key === " " && menuOptions[menuIndex]) {
                     const selected = menuOptions[menuIndex];
 
-                    if (open === "ingameMenu") {
-                        // Inventory/Map/Options
-                        if (selected === "Inventory") setFocus("content");
-                        else if (selected === "Map") console.log("Open Map");
-                        else if (selected === "Options") console.log("Open Options");
-                        else if (selected === "Save Game") menuOpenRef.current = "saveMenu";
-                        else if (selected === "Load Game") menuOpenRef.current = "loadMenu";
-                    }
-
-                    if (open === "saveMenu") {
-                        const slot = menuIndex + 1;
-                        savePlayerGame(playerRef.current, slot);
-                        menuOpenRef.current = false;
-                    }
-
-                    if (open === "loadMenu") {
-                        const slot = menuIndex + 1;
-                        // Trigger load screen + loading
-                        // This function must exist in your system
-                        loadPlayerGame(slot, playerRef);
-                        menuOpenRef.current = false;
-                    }
+                    if (selected === "Inventory") setFocus("content");
+                    else if (selected === "Map") console.log("Open Map");
+                    else if (selected === "Options") console.log("Open Options");
                 }
                 return;
             }
 
-            // Inventory content handling
             if (focus === "content" && open === "ingameMenu" && activeMenu === "Inventory") {
                 const slot = fullInventory[inventoryIndex];
                 const col = inventoryIndex % INVENTORY_COLUMNS;
@@ -196,7 +178,6 @@ export const PlayerMenuUI = ({ playerRef }) => {
                     if (key === "control" || key === "ctrl") setCombineSourceIndex(null);
                 }
 
-                // Context menu
                 if (contextOpen) {
                     if (examineText) return;
                     if (!slot) {
@@ -222,13 +203,11 @@ export const PlayerMenuUI = ({ playerRef }) => {
                     return;
                 }
 
-                // Inventory movement
                 if (key === "a") col === 0 ? setFocus("menu") : setInventoryIndex(i => i - 1);
                 if (key === "d") setInventoryIndex(i => Math.min(TOTAL_SLOTS - 1, i + 1));
                 if (key === "w") setInventoryIndex(i => Math.max(0, i - INVENTORY_COLUMNS));
                 if (key === "s") setInventoryIndex(i => Math.min(TOTAL_SLOTS - 1, i + INVENTORY_COLUMNS));
 
-                // Open context menu
                 if (key === " " && slot && ITEM_INTERACT_TABLE[slot.item] && combineSourceIndex === null) {
                     setContextOpen(true);
                     setContextIndex(0);
@@ -251,7 +230,7 @@ export const PlayerMenuUI = ({ playerRef }) => {
         fullInventory
     ]);
 
-    if (!open) return null;
+    if (open !== "ingameMenu") return null;
 
     return (
         <div style={{ position: "absolute", inset: 0, background: "black", color: "white", display: "flex", justifyContent: "center", alignItems: "center" }}>

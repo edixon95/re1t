@@ -17,7 +17,7 @@ export const useItemStore = create((set, get) => ({
     ]
   },
 
-  safeToRender: false, // new flag
+  safeToRender: true, // new flag
 
   setSafeToRender: (value) => set({ safeToRender: value }),
 
@@ -63,7 +63,10 @@ export const useItemStore = create((set, get) => ({
   },
 
   loadItemsFromSave: (savedItems) => {
-    if (!savedItems) return;
+    if (!savedItems) {
+      setTimeout(() => set({ safeToRender: true }), 0);
+      return;
+    }
 
     set({ safeToRender: false }); // freeze rendering
 
