@@ -15,6 +15,7 @@ export const liveEnemyRefs = [];
 const PLAYER_CHECK_INTERVAL = 1;
 const MAX_LOST_PLAYER_CHECKS = 3;
 const PATROL_BUFFER = 0.15;
+const ENEMY_SEPARATION = 0.5; // distance to keep from each other
 
 export const EnemyManager = ({ gameState, player }) => {
     const enemies = useEnemyStore(
@@ -63,7 +64,7 @@ export const EnemyManager = ({ gameState, player }) => {
         const combinedFloor = {
             position: [(minX + maxX) / 2, y, (minZ + maxZ) / 2],
             size: [maxX - minX, maxZ - minZ],
-            tiles: level.world // needed for patrol checks
+            tiles: level.world
         };
 
         const g = createGrid(combinedFloor, obstacles, 0.2, PATROL_BUFFER);
@@ -108,10 +109,9 @@ export const EnemyManager = ({ gameState, player }) => {
                     }
                 }
             } else if (enemyPathsRef.current[i]?.isPlayerTarget) {
-                // Increment lost player checks
                 lostPlayerChecksRef.current[i] = (lostPlayerChecksRef.current[i] || 0) + 1;
                 if (lostPlayerChecksRef.current[i] >= MAX_LOST_PLAYER_CHECKS) {
-                    enemyPathsRef.current[i] = null; // lost player
+                    enemyPathsRef.current[i] = null;
                     lostPlayerChecksRef.current[i] = 0;
                 }
             }
@@ -145,7 +145,7 @@ export const EnemyManager = ({ gameState, player }) => {
             }
 
             // -------------------------
-            // MOVE ALONG PATH
+            // MOVE ALONG PATH WITH ENEMY AWARENESS
             // -------------------------
             const path = enemyPathsRef.current[i]?.path;
             const idx = enemyTargetIndexRef.current[i] ?? 0;
@@ -158,11 +158,27 @@ export const EnemyManager = ({ gameState, player }) => {
             const dir = target.clone().sub(ref.position);
             const distance = dir.length();
 
-            if (distance < 0.1) enemyTargetIndexRef.current[i]++;
-            else {
-                dir.normalize();
+            // Compute separation from other enemies
+            let separation = new THREE.Vector3(0, 0, 0);
+            for (let j = 0; j < liveEnemyRefs.length; j++) {
+                if (i === j) continue;
+                const other = liveEnemyRefs[j];
+                if (!other) continue;
+
+                const offset = ref.position.clone().sub(other.position);
+                const dist = offset.length();
+                if (dist < ENEMY_SEPARATION && dist > 0) {
+                    separation.add(offset.normalize().multiplyScalar((ENEMY_SEPARATION - dist)));
+                }
+            }
+
+            if (distance < 0.1) {
+                enemyTargetIndexRef.current[i]++;
+            } else {
+                dir.add(separation).normalize();
                 ref.position.add(dir.multiplyScalar(Math.min(enemy.speed * delta, distance)));
 
+                // Rotate toward target
                 const targetY = Math.atan2(dir.x, dir.z);
                 const deltaY = ((targetY - ref.rotation.y + Math.PI) % (2 * Math.PI)) - Math.PI;
                 ref.rotation.y += deltaY * 0.1;
