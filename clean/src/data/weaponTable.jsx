@@ -20,6 +20,6 @@ export const WEAPON_TABLE = {
         critical: 0,
         name: "Colt",
         delay: 1,
-        soundLevel: 2
+        soundLevel: 20
     }
 }

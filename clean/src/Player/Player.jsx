@@ -74,7 +74,6 @@ export const Player = ({ playerRef, level }) => {
 
   useFrame((state, delta) => {
     if (!playerRef?.current) return;
-    updateSounds(delta);
     if (isTransition.current) return;
 
     const currentTime = state.clock.elapsedTime;
