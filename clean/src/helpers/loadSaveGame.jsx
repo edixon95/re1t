@@ -22,14 +22,14 @@ export const loadPlayerGame = (slot, playerRef) => {
     const saveData = JSON.parse(raw);
 
     applyDoorsFromSave(saveData.doors);
-
+    console.log(saveData)
     useItemStore.getState().loadItemsFromSave(saveData.items);
     useEnemyStore.getState().loadEnemiesFromSave(saveData.enemies);
     useInventoryStore.getState().loadInventoryFromSave(saveData.inventory);
 
     loadPlayerTransform(playerRef, saveData.player);
 
-    return true;
+    return saveData?.player?.level ?? false;
 };
 
 
@@ -59,5 +59,5 @@ export const savePlayerGame = (playerRef, slot) => {
         enemies
     };
 
-    console.log("SAVE DATA:", saveData);
+    localStorage.setItem(`save_${slot}`, JSON.stringify(saveData));
 };

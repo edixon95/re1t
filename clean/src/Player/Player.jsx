@@ -81,7 +81,7 @@ export const Player = ({ playerRef, level }) => {
     // MENU TOGGLE
     const tabPressed = !!window.keys["KeyQ"];
     if (tabPressed && !prevTabKeyRef.current) {
-      menuOpenRef.current = !menuOpenRef.current;
+      menuOpenRef.current = menuOpenRef.current !== "ingameMenu" ? "ingameMenu" : false;
     }
     prevTabKeyRef.current = tabPressed;
     if (menuOpenRef.current) return;

@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { isTransition, Player } from "./Player/Player";
 import { CameraManager } from "./managers/CameraManager";
 import { WorldManager } from "./managers/WorldManager";
@@ -7,8 +7,7 @@ import { EnemyManager } from "./managers/EnemyManger";
 import { DebugSoundSpheres } from "./Player/SoundSphere";
 import { loadPlayerGame, savePlayerGame } from "./helpers/loadSaveGame";
 
-export const Experience = () => {
-    const playerRef = useRef(null)
+export const Experience = ({ playerRef }) => {
     const [region, setRegion] = useState(null);
     const [gameState, setGameState] = useState({
         level: "intro",
