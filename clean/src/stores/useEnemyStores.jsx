@@ -12,6 +12,15 @@ export const useEnemyStore = create((set) => ({
                 health: ENEMY_TABLE.Basic.health,
                 speed: ENEMY_TABLE.Basic.speed,
                 isAlive: true
+            },
+            {
+                id: "introTwo-1",
+                position: [-3, 0.5, 1],
+                unspawnedAt: [],
+                type: "Basic",
+                health: ENEMY_TABLE.Basic.health,
+                speed: ENEMY_TABLE.Basic.speed,
+                isAlive: true
             }
         ]
     },
