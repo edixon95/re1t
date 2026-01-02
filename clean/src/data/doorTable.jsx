@@ -46,3 +46,33 @@ export const DOOR_TABLE = {
     intro,
     introTwo
 };
+
+export const getDoorsForSave = () => {
+    const result = {};
+
+    for (const [levelName, doors] of Object.entries(DOOR_TABLE)) {
+        result[levelName] = doors.map(door => ({
+            id: door.id,
+            isUnlocked: door.isUnlocked ?? false
+        }));
+    }
+
+    return result;
+};
+
+export const applyDoorsFromSave = (savedDoors) => {
+    if (!savedDoors) return;
+
+    for (const levelKey in savedDoors) {
+        const levelDoors = DOOR_TABLE[levelKey];
+        if (!levelDoors) continue;
+
+        for (const savedDoor of savedDoors[levelKey]) {
+            const door = levelDoors.find(d => d.id === savedDoor.id);
+            if (door) {
+                door.isUnlocked = !!savedDoor.isUnlocked;
+            }
+        }
+    }
+};
+

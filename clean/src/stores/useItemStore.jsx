@@ -44,4 +44,40 @@ export const useItemStore = create((set, get) => ({
     set({ itemTable: { ...table, [levelKey]: newLevelItems } });
   },
 
+  getItemsForSave: () => {
+    const itemTable = get().itemTable;
+
+    const result = {};
+    for (const [levelKey, items] of Object.entries(itemTable)) {
+      result[levelKey] = items.map(item => ({
+        id: item.id,
+        isCollected: item.isCollected ?? false
+      }));
+    }
+
+    return result;
+  },
+
+  loadItemsFromSave: (savedItems) => {
+    if (!savedItems) return;
+
+    set((state) => {
+      const newTable = { ...state.itemTable };
+
+      for (const levelKey in savedItems) {
+        if (!newTable[levelKey]) continue;
+
+        newTable[levelKey] = newTable[levelKey].map(item => {
+          const saved = savedItems[levelKey].find(s => s.id === item.id);
+          return saved
+            ? { ...item, isCollected: saved.isCollected }
+            : item;
+        });
+      }
+
+      return { itemTable: newTable };
+    });
+  },
+
+
 }));

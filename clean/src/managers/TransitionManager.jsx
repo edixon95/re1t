@@ -6,7 +6,7 @@ import { interactionAttempt, interactionSuccess } from "../UI/InformationalUI";
 import { useEnemyStore } from "../stores/useEnemyStores";
 import { liveEnemyRefs } from "./EnemyManger";
 
-export const TransitionManager = (playerRef, setGameState, isTransitionRef) => {
+export const TransitionManager = (playerRef, setGameState, isTransitionRef, handleUpdatePlayerRef) => {
     if (!playerRef || !setGameState) return;
 
 
@@ -43,6 +43,7 @@ export const TransitionManager = (playerRef, setGameState, isTransitionRef) => {
 
         setTimeout(() => {
             setGameState((prev) => ({ ...prev, level: targetLevel }));
+            handleUpdatePlayerRef(targetLevel)
 
             requestAnimationFrame(() => {
                 const targetDoor = DOOR_TABLE[targetLevel]?.find(
@@ -73,6 +74,27 @@ export const TransitionManager = (playerRef, setGameState, isTransitionRef) => {
     window.addEventListener("door:enter", handleDoorEnter);
 
     return () => window.removeEventListener("door:enter", handleDoorEnter);
+};
+
+export const TriggerLoadScreen = (isTransitionRef) => {
+    if (!playerRef || !setGameState) return;
+
+
+    const handleHideScene = () => {
+        setGameState((prev) => ({ ...prev, fade: true }));
+
+        setTimeout(() => {
+            requestAnimationFrame(() => {
+
+                if (isTransitionRef) isTransitionRef.current = false;
+                setGameState((prev) => ({ ...prev, fade: false }));
+            });
+        }, 700);
+    };
+
+    window.addEventListener("game:load", handleHideScene);
+
+    return () => window.removeEventListener("game:load", handleHideScene);
 };
 
 export const TransitionScreen = () => {

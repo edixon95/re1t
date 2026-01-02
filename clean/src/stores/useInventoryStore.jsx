@@ -256,5 +256,43 @@ export const useInventoryStore = create((set, get) => ({
     tryGetWeaponInformation: (equipped) => {
         if (!equipped) return WEAPON_TABLE.Knife
         return WEAPON_TABLE[equipped]
-    }
+    },
+
+    getInventoryForSave: () => {
+        const {
+            inventory,
+            equippedItem,
+            playerHealth,
+            maxHealth
+        } = get();
+
+        return {
+            inventory: inventory.map(slot => {
+                if (!slot) return null;
+
+                return {
+                    item: slot.item,
+                    amount: slot.amount ?? 1,
+                    cAmmo: slot.cAmmo ?? 0,
+                    mAmmo: slot.mAmmo ?? 0
+                };
+            }),
+            equippedItem,
+            playerHealth,
+            maxHealth
+        };
+    },
+
+    loadInventoryFromSave: (savedInventory) => {
+        if (!savedInventory) return;
+
+        set({
+            inventory: savedInventory.inventory,
+            equippedItem: savedInventory.equippedItem,
+            playerHealth: savedInventory.playerHealth,
+            maxHealth: savedInventory.maxHealth
+        });
+    },
+
+
 }))

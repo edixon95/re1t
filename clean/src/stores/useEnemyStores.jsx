@@ -1,7 +1,7 @@
 import { create } from "zustand"
 import { ENEMY_TABLE } from "../data/enemyTable"
 
-export const useEnemyStore = create((set) => ({
+export const useEnemyStore = create((set, get) => ({
     enemiesByLevel: {
         introTwo: [
             {
@@ -78,4 +78,46 @@ export const useEnemyStore = create((set) => ({
             }
         }))
     },
+
+    getEnemiesForSave: () => {
+        const enemiesByLevel = get().enemiesByLevel;
+
+        const result = {};
+        for (const [levelKey, enemies] of Object.entries(enemiesByLevel)) {
+            result[levelKey] = enemies.map(enemy => ({
+                id: enemy.id,
+                position: enemy.position,
+                isAlive: enemy.isAlive ?? true
+            }));
+        }
+
+        return result;
+    },
+
+    loadEnemiesFromSave: (savedEnemies) => {
+        if (!savedEnemies) return;
+
+        set((state) => {
+            const newTable = { ...state.enemiesByLevel };
+
+            for (const levelKey in savedEnemies) {
+                if (!newTable[levelKey]) continue;
+
+                newTable[levelKey] = newTable[levelKey].map(enemy => {
+                    const saved = savedEnemies[levelKey].find(e => e.id === enemy.id);
+                    if (!saved) return enemy;
+
+                    return {
+                        ...enemy,
+                        position: saved.position ?? enemy.position,
+                        isAlive: saved.isAlive
+                    };
+                });
+            }
+
+            return { enemiesByLevel: newTable };
+        });
+    },
+
+
 }))
