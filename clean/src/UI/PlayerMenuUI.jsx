@@ -252,7 +252,7 @@ export const PlayerMenuUI = () => {
                             equipped={equippedItem}
                             combineSourceIndex={combineSourceIndex}
                             validCombineTargets={validCombineTargets}
-                            containerRef={inventoryRef} // added
+                            containerRef={inventoryRef}
                         />
 
 

@@ -7,10 +7,10 @@ import { tryInteract } from "./tryInteract";
 import { useInventoryStore } from "../stores/useInventoryStore";
 import { tryAttackEnemy } from "./tryAttackEnemy";
 import { useEnemyStore } from "../stores/useEnemyStores";
-import { emitSound, updateSounds } from "../sounds/SoundSystem";
+import { emitSound } from "../sounds/SoundSystem";
 
-export const menuOpenRef = { current: false }; // lock inputs
-export const isTransition = { current: false }; // Lock but no menu
+export const menuOpenRef = { current: false };
+export const isTransition = { current: false };
 
 export const Player = ({ playerRef, level }) => {
   const aimingRef = useRef(false);

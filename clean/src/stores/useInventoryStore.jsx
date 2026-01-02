@@ -6,6 +6,7 @@ import { WEAPON_TABLE } from "../data/weaponTable"
 import { useItemStore } from "./useItemStore"
 import { CONSUME_TABLE } from "../data/consumeTable"
 import { stingometer } from "../helpers/stingometer"
+import { menuOpenRef } from "../Player/Player"
 
 export const useInventoryStore = create((set, get) => ({
     inventory: Array(12).fill(null),
@@ -14,6 +15,27 @@ export const useInventoryStore = create((set, get) => ({
         equipped: null,
         cAmmo: 0,
         mAmmo: 0
+    },
+
+    playerHealth: 3,
+    maxHealth: 3,
+
+    takeDamage: (amount) => {
+        set((state) => {
+            const newHealth = Math.max(state.playerHealth - amount, 0);
+
+            if (newHealth === 0) { // TODO: Death screen
+                menuOpenRef.current = true;
+            }
+            return { playerHealth: newHealth };
+        });
+    },
+
+    healPlayer: (amount) => {
+        set((state) => {
+            const newHealth = Math.min(state.playerHealth + amount, state.maxHealth);
+            return { playerHealth: newHealth };
+        });
     },
 
     tryAddInventory: (item) => {
@@ -39,7 +61,6 @@ export const useInventoryStore = create((set, get) => ({
                 const allItems = useItemStore.getState().getAllItems();
                 const thisItem = allItems.find((x) => x.id === item.id)
                 if (thisItem?.mAmmo) {
-                    // If it's a weapon, set the max ammo
                     item.mAmmo = thisItem.mAmmo
                     // TODO: Tweak
                     // Weapons have a chance to start with ammo
