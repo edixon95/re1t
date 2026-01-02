@@ -7,6 +7,7 @@ import { tryInteract } from "./tryInteract";
 import { useInventoryStore } from "../stores/useInventoryStore";
 import { tryAttackEnemy } from "./tryAttackEnemy";
 import { useEnemyStore } from "../stores/useEnemyStores";
+import { emitSound, updateSounds } from "../sounds/SoundSystem";
 
 export const menuOpenRef = { current: false }; // lock inputs
 export const isTransition = { current: false }; // Lock but no menu
@@ -21,6 +22,13 @@ export const Player = ({ playerRef, level }) => {
 
   const muzzleLightRef = useRef(null);
   const muzzleTimeoutRef = useRef(null);
+
+  const moveSoundTimerRef = useRef(0);
+
+  const WALK_SOUND_DELAY = 0.5;
+  const WALK_SOUND_LEVEL = 2;
+  const RUN_SOUND_LEVEL = 4;
+
 
   const [aiming, setAiming] = useState(false);
 
@@ -66,6 +74,7 @@ export const Player = ({ playerRef, level }) => {
 
   useFrame((state, delta) => {
     if (!playerRef?.current) return;
+    updateSounds(delta);
     if (isTransition.current) return;
 
     const currentTime = state.clock.elapsedTime;
@@ -99,6 +108,11 @@ export const Player = ({ playerRef, level }) => {
             if (!isKnife) {
               consumeAmmo();
               triggerMuzzleFlash();
+
+              emitSound(
+                playerRef.current.position,
+                weaponInfo.soundLevel
+              );
             }
 
             const tEnemy = tryAttackEnemy(
@@ -158,6 +172,33 @@ export const Player = ({ playerRef, level }) => {
     prevAimKeyRef.current = aimKeyPressed;
 
     // MOVEMENT (NO MOVE WHILE AIMING)
+    let isMoving = false;
+
+    if (!aimingRef.current) {
+      if (window.keys["KeyW"] || window.keys["KeyS"]) {
+        isMoving = true;
+      }
+    }
+
+    if (isMoving) {
+      moveSoundTimerRef.current += delta;
+
+      if (moveSoundTimerRef.current >= WALK_SOUND_DELAY) {
+        const isRunning = window.keys["ShiftLeft"];
+        emitSound(
+          playerRef.current.position,
+          isRunning ? RUN_SOUND_LEVEL : WALK_SOUND_LEVEL,
+          0.15
+        );
+        moveSoundTimerRef.current = 0;
+      }
+    } else {
+      moveSoundTimerRef.current = 0;
+    }
+
+
+
+
     if (!aimingRef.current) {
       direction.current.set(0, 0, -1);
       if (window.keys["KeyW"]) {

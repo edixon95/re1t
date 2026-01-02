@@ -4,6 +4,7 @@ import { CameraManager } from "./managers/CameraManager";
 import { WorldManager } from "./managers/WorldManager";
 import { TransitionManager } from "./managers/TransitionManager";
 import { EnemyManager } from "./managers/EnemyManger";
+import { DebugSoundSpheres } from "./Player/SoundSphere";
 
 export const Experience = () => {
     const playerRef = useRef();
@@ -26,6 +27,7 @@ export const Experience = () => {
 
             {/* Player */}
             <Player playerRef={playerRef} level={gameState.level} />
+            <DebugSoundSpheres />
             <EnemyManager gameState={gameState} player={playerRef} />
 
             {/* Camera system */}
