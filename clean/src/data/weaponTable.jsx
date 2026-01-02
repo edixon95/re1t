@@ -21,5 +21,13 @@ export const WEAPON_TABLE = {
         name: "Colt",
         delay: 1,
         soundLevel: 20
-    }
+    },
+    Uzi: {
+        damage: 1,
+        range: 5,
+        critical: 0,
+        name: "Uzi",
+        delay: 0.2,
+        soundLevel: 20
+    },
 }
