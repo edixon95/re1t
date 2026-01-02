@@ -3,6 +3,7 @@ import { useRef, useState, useEffect } from "react";
 import { shallow } from "zustand/shallow";
 import * as THREE from "three";
 import { useEnemyStore } from "../stores/useEnemyStores";
+import { useInventoryStore } from "../stores/useInventoryStore";
 import { LEVEL_TABLE } from "../data/levelTabel";
 import { wallMeshes } from "./WallManager";
 import { propMeshes } from "./PropManager";
@@ -15,9 +16,9 @@ export const liveEnemyRefs = [];
 const PLAYER_CHECK_INTERVAL = 1;
 const MAX_LOST_PLAYER_CHECKS = 180;
 const PATROL_BUFFER = 0.15;
-const ENEMY_SEPARATION = 0.125; // minimal personal space
-const ENEMY_STOP_DISTANCE = 0.75; // distance to stop from player
-const REPULSION_RADIUS = ENEMY_SEPARATION * 2; // predictive repulsion
+const ENEMY_SEPARATION = 0.125;
+const ENEMY_STOP_DISTANCE = 0.75;
+const REPULSION_RADIUS = ENEMY_SEPARATION * 2;
 
 export const EnemyManager = ({ gameState, player }) => {
     const enemies = useEnemyStore(
@@ -31,8 +32,10 @@ export const EnemyManager = ({ gameState, player }) => {
     const enemyTargetIndexRef = useRef([]);
     const lastPathUpdateRef = useRef([]);
     const lostPlayerChecksRef = useRef([]);
+    const attackTimersRef = useRef([]); // NEW: for attack delays
 
     const [grid, setGrid] = useState(null);
+    const { takeDamage } = useInventoryStore.getState(); // get damage function
 
     const pickPatrolPosition = () => {
         if (!level || !level.world.length) return new THREE.Vector3(0, 0.5, 0);
@@ -46,7 +49,6 @@ export const EnemyManager = ({ gameState, player }) => {
         );
     };
 
-    // Build pathfinding grid
     useEffect(() => {
         if (!level) return;
         const obstacles = [...wallMeshes, ...propMeshes].map(r => r.current).filter(Boolean);
@@ -84,7 +86,15 @@ export const EnemyManager = ({ gameState, player }) => {
             const ref = liveEnemyRefs[i];
             if (!ref || !enemy.isAlive) return;
 
-            // Path recalculation timing
+            // Initialize attack timer if not exist
+            if (!attackTimersRef.current[i]) {
+                attackTimersRef.current[i] = { delay: 0, attackTimer: 0, attacking: false };
+            }
+            const timer = attackTimersRef.current[i];
+
+            // -------------------------
+            // PATHING & MOVEMENT
+            // -------------------------
             const lastUpdate = lastPathUpdateRef.current[i] || 0;
             lastPathUpdateRef.current[i] = lastUpdate + delta;
             const recalcPath = lastPathUpdateRef.current[i] >= PLAYER_CHECK_INTERVAL;
@@ -92,9 +102,7 @@ export const EnemyManager = ({ gameState, player }) => {
 
             const obstacles = [...wallMeshes, ...propMeshes].map(r => r.current).filter(Boolean);
 
-            // -------------------------
-            // PRIORITY 1: PLAYER CHASE
-            // -------------------------
+            // --- Player chase ---
             const dirToPlayer = playerPos.clone().sub(ref.position).normalize();
             const distToPlayer = playerPos.clone().sub(ref.position).length();
             const ray = new THREE.Raycaster(ref.position.clone(), dirToPlayer, 0, distToPlayer);
@@ -118,9 +126,7 @@ export const EnemyManager = ({ gameState, player }) => {
                 }
             }
 
-            // -------------------------
-            // PRIORITY 2: SOUND INVESTIGATION
-            // -------------------------
+            // --- Sound investigation ---
             if (!enemyPathsRef.current[i] || !enemyPathsRef.current[i]?.isPlayerTarget) {
                 for (const sound of soundEvents) {
                     if (ref.position.distanceTo(sound.position) <= sound.radius) {
@@ -130,7 +136,6 @@ export const EnemyManager = ({ gameState, player }) => {
                             (Math.random() - 0.5) * ENEMY_SEPARATION * 2
                         );
                         const targetPos = sound.position.clone().add(offset);
-
                         const path = findPath(grid, ref.position, targetPos);
                         if (path.length > 0) {
                             enemyPathsRef.current[i] = { path, isSoundTarget: true };
@@ -141,9 +146,7 @@ export const EnemyManager = ({ gameState, player }) => {
                 }
             }
 
-            // -------------------------
-            // PRIORITY 3: PATROL
-            // -------------------------
+            // --- Patrol ---
             if (!enemyPathsRef.current[i]) {
                 const patrolPos = pickPatrolPosition();
                 const path = findPath(grid, ref.position, patrolPos);
@@ -153,54 +156,74 @@ export const EnemyManager = ({ gameState, player }) => {
                 }
             }
 
-            // -------------------------
-            // MOVE ALONG PATH WITH PREDICTIVE SEPARATION AND PLAYER STOP DISTANCE
-            // -------------------------
+            // --- Move along path with separation ---
             const path = enemyPathsRef.current[i]?.path;
             const idx = enemyTargetIndexRef.current[i] ?? 0;
-            if (!path || idx >= path.length) return;
+            if (path && idx < path.length) {
+                const node = path[idx];
+                if (node && !isNaN(node.x) && !isNaN(node.z)) {
+                    const target = new THREE.Vector3(node.x, ref.position.y, node.z);
+                    let dir = target.clone().sub(ref.position);
+                    let distance = dir.length();
 
-            const node = path[idx];
-            if (!node || isNaN(node.x) || isNaN(node.z)) return;
+                    let separation = new THREE.Vector3(0, 0, 0);
+                    for (let j = 0; j < liveEnemyRefs.length; j++) {
+                        if (i === j) continue;
+                        const other = liveEnemyRefs[j];
+                        if (!other) continue;
+                        const offset = ref.position.clone().sub(other.position);
+                        const dist = offset.length();
+                        if (dist > 0 && dist < REPULSION_RADIUS) {
+                            separation.add(offset.normalize().multiplyScalar((REPULSION_RADIUS - dist) / REPULSION_RADIUS * enemy.speed * 0.5));
+                        }
+                    }
 
-            const target = new THREE.Vector3(node.x, ref.position.y, node.z);
-            let dir = target.clone().sub(ref.position);
-            let distance = dir.length();
+                    const stopDist = enemyPathsRef.current[i]?.isPlayerTarget ? ENEMY_STOP_DISTANCE : 0;
+                    const moveDistance = Math.max(distance - stopDist, 0);
 
-            // Predictive separation from other enemies
-            let separation = new THREE.Vector3(0, 0, 0);
-            for (let j = 0; j < liveEnemyRefs.length; j++) {
-                if (i === j) continue;
-                const other = liveEnemyRefs[j];
-                if (!other) continue;
+                    if (moveDistance < 0.001) {
+                        enemyTargetIndexRef.current[i]++;
+                    } else {
+                        dir.add(separation);
+                        dir.x += (Math.random() - 0.5) * 0.01;
+                        dir.z += (Math.random() - 0.5) * 0.01;
+                        dir.normalize();
+                        ref.position.add(dir.multiplyScalar(Math.min(enemy.speed * delta, moveDistance)));
 
-                const offset = ref.position.clone().sub(other.position);
-                const dist = offset.length();
-                if (dist > 0 && dist < REPULSION_RADIUS) {
-                    const strength = (REPULSION_RADIUS - dist) / REPULSION_RADIUS;
-                    separation.add(offset.normalize().multiplyScalar(strength * enemy.speed * 0.5));
+                        const targetY = Math.atan2(dir.x, dir.z);
+                        const deltaY = ((targetY - ref.rotation.y + Math.PI) % (2 * Math.PI)) - Math.PI;
+                        ref.rotation.y += deltaY * 0.1;
+                    }
                 }
             }
 
-            // Stop distance if chasing player
-            let stopDist = enemyPathsRef.current[i]?.isPlayerTarget ? ENEMY_STOP_DISTANCE : 0;
-            const moveDistance = Math.max(distance - stopDist, 0);
+            const inAttackRange = distToPlayer - 0.2 <= ENEMY_STOP_DISTANCE;
 
-            if (moveDistance < 0.001) {
-                enemyTargetIndexRef.current[i]++;
+            if (inAttackRange) {
+                // counting attack delay first
+                if (!timer.attacking) {
+                    timer.delay += delta;
+
+                    if (timer.delay >= enemy.attackDelay) {
+                        timer.attacking = true;
+                        timer.attackTimer = 0;
+                    }
+                } else {
+                    timer.attackTimer += delta;;
+
+                    if (timer.attackTimer >= enemy.attackWait) {
+                        takeDamage(enemy.attackDamage);
+                        timer.attackTimer = 0;
+                    }
+                }
             } else {
-                // Tiny random nudge to prevent sticking
-                dir.add(separation);
-                dir.x += (Math.random() - 0.5) * 0.01;
-                dir.z += (Math.random() - 0.5) * 0.01;
-                dir.normalize();
-
-                ref.position.add(dir.multiplyScalar(Math.min(enemy.speed * delta, moveDistance)));
-
-                const targetY = Math.atan2(dir.x, dir.z);
-                const deltaY = ((targetY - ref.rotation.y + Math.PI) % (2 * Math.PI)) - Math.PI;
-                ref.rotation.y += deltaY * 0.1;
+                timer.delay = Math.min(timer.delay, enemy.attackDelay);
+                timer.attackTimer = 0;
+                timer.attacking = false;
             }
+
+
+
         });
     });
 
@@ -211,6 +234,7 @@ export const EnemyManager = ({ gameState, player }) => {
     enemyTargetIndexRef.current.length = enemies.length;
     lastPathUpdateRef.current.length = enemies.length;
     lostPlayerChecksRef.current.length = enemies.length;
+    attackTimersRef.current.length = enemies.length;
 
     return (
         <>

@@ -6,6 +6,7 @@ import { WEAPON_TABLE } from "../data/weaponTable"
 import { useItemStore } from "./useItemStore"
 import { CONSUME_TABLE } from "../data/consumeTable"
 import { stingometer } from "../helpers/stingometer"
+import { menuOpenRef } from "../Player/Player"
 
 export const useInventoryStore = create((set, get) => ({
     inventory: Array(12).fill(null),
@@ -14,6 +15,29 @@ export const useInventoryStore = create((set, get) => ({
         equipped: null,
         cAmmo: 0,
         mAmmo: 0
+    },
+
+    playerHealth: 3,
+    maxHealth: 3,
+
+    takeDamage: (amount) => {
+        set((state) => {
+            console.log("amount", amount)
+            const newHealth = Math.max(state.playerHealth - amount, 0);
+            console.log(`Player took ${amount} damage! Health: ${newHealth}`);
+
+            if (newHealth === 0) {
+                menuOpenRef.current = true;
+            }
+            return { playerHealth: newHealth };
+        });
+    },
+
+    healPlayer: (amount) => {
+        set((state) => {
+            const newHealth = Math.min(state.playerHealth + amount, state.maxHealth);
+            return { playerHealth: newHealth };
+        });
     },
 
     tryAddInventory: (item) => {

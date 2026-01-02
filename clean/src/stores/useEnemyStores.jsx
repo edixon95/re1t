@@ -10,6 +10,9 @@ export const useEnemyStore = create((set) => ({
                 type: "Basic",
                 health: ENEMY_TABLE.Basic.health,
                 speed: ENEMY_TABLE.Basic.speed,
+                attackWait: ENEMY_TABLE.Basic.attackWait,
+                attackDelay: ENEMY_TABLE.Basic.attackDelay,
+                attackDamage: ENEMY_TABLE.Basic.attackDamage,
                 isAlive: true
             },
             {
@@ -18,6 +21,9 @@ export const useEnemyStore = create((set) => ({
                 type: "Basic",
                 health: ENEMY_TABLE.Basic.health,
                 speed: ENEMY_TABLE.Basic.speed,
+                attackWait: ENEMY_TABLE.Basic.attackWait,
+                attackDelay: ENEMY_TABLE.Basic.attackDelay,
+                attackDamage: ENEMY_TABLE.Basic.attackDamage,
                 isAlive: true
             }
         ]
