@@ -7,11 +7,14 @@ import { TransitionScreen } from "./managers/TransitionManager";
 import { useRef, useState } from "react";
 import { MainMenu } from "./UI/MainMenu";
 
+export const isDevCam = false
+
 export const App = () => {
   const playerRef = useRef()
   const [gameState, setGameState] = useState({
     level: "intro",
   });
+
   return (
     <>
       <Canvas
@@ -22,9 +25,13 @@ export const App = () => {
       </Canvas>
 
       <TransitionScreen />
-      <MainMenu playerRef={playerRef} gameState={gameState} setGameState={setGameState} />
-      <PlayerMenuUI playerRef={playerRef} />
-      <InformationalUI />
+      {!isDevCam && (
+        <>
+          <MainMenu playerRef={playerRef} gameState={gameState} setGameState={setGameState} />
+          <PlayerMenuUI playerRef={playerRef} />
+          <InformationalUI />
+        </>
+      )}
     </>
   );
 }

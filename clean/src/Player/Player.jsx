@@ -79,7 +79,7 @@ export const Player = ({ playerRef, level }) => {
     const currentTime = state.clock.elapsedTime;
 
     // MENU TOGGLE
-    const tabPressed = !!window.keys["KeyQ"];
+    const tabPressed = !!window.keys["KeyE"];
     if (tabPressed && !prevTabKeyRef.current) {
       menuOpenRef.current = menuOpenRef.current !== "ingameMenu" ? "ingameMenu" : false;
     }
@@ -147,7 +147,7 @@ export const Player = ({ playerRef, level }) => {
     }
 
     // AIM TOGGLE
-    const aimKeyPressed = !!window.keys["ControlLeft"];
+    const aimKeyPressed = !!window.keys["KeyQ"];
 
     if (aimKeyPressed && !prevAimKeyRef.current) {
       aimingRef.current = !aimingRef.current;
