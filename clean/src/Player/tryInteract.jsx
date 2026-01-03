@@ -46,7 +46,6 @@ export const tryInteract = (player, level, canOpenMenu) => {
     const meshes = [...itemMeshes, ...otherMeshes]
         .map(ref => ref.current)
         .filter(Boolean);
-
     let hitItem = null;
     let nearestDistance = Infinity;
 
@@ -86,7 +85,6 @@ export const tryInteract = (player, level, canOpenMenu) => {
     }
 
     if (!hitItem) return;
-
     // Handle item pickup
     if (hitItem.userData.type === "item") {
         const itemStore = useItemStore.getState();
