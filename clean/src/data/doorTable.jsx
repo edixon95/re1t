@@ -1,8 +1,26 @@
 const intro = [
     {
+        id: "A_HALLWAY_EXIT_STAIR",
+        self: "intro",
+        type: "stair",
+        travel: "up",
+        position: [-3, 0, 5],
+        size: [2, 2, 3],
+        forward: [1, 0, 0],
+        direction: 4,
+        leadsTo: {
+            level: "introTwo",
+            doorId: "B_HALLWAY_ENTRY_UPPER",
+        },
+        spawn: {
+            position: [-3.7, 0.5, 4.3],
+            rotationY: 0
+        },
+    },
+    {
         id: "A_HALLWAY_EXIT",
         self: "intro",
-        position: [-3, 1, 7.85],
+        position: [-2, 1, 7.8],
         size: [1, 2, 0.3],
         forward: [1, 0, 0],
         direction: 1,

@@ -1,6 +1,6 @@
 // Rooms geo - INTRO
-const HALLWAY_A_1 = { position: [8.8, 3, -1.5], lookAt: [2.5, -3.5, 2], boundingBox: [4, 0, 0], size: [10, 1, 4], }
-const HALLWAY_A_2 = { position: [-4.5, 3, -1.8], lookAt: [2.5, -10, 9], boundingBox: [-3, 0, 3], size: [4, 1, 10] }
+const HALLWAY_A_1 = { position: [-4.710, 0.374, 1.755], lookAt: [0.715, -0.0539, -0.696], boundingBox: [4, 0, 0], size: [10, 1, 4], }
+const HALLWAY_A_2 = { position: [-1.43, 2.5, 7.737], lookAt: [-1.994, 1.944, 7.126], boundingBox: [-3, 0, 3], size: [4, 1, 10] }
 const intro = {
   HALLWAY_A_1,
   HALLWAY_A_2
