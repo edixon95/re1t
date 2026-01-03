@@ -6,6 +6,7 @@ import { DoorManager } from "../../managers/DoorManager";
 import { DOOR_TABLE } from "../../data/doorTable";
 import { useItemStore } from "../../stores/useItemStore";
 import { LEVEL_TABLE } from "../../data/levelTabel";
+import { SaveStation } from "../../levelParts/SaveStation";
 
 export const WorldIntro = () => {
     const floors = LEVEL_TABLE["intro"].world
@@ -57,6 +58,9 @@ export const WorldIntro = () => {
                 <ItemManager items={introItems} />
             }
             <DoorManager doors={DOOR_TABLE["intro"]} />
+
+            {/* Manual per level */}
+            <SaveStation position={[2, 0.65, 0]} />
         </>
     );
 };
