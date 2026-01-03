@@ -11,11 +11,14 @@ const intro = [
             doorId: "B_HALLWAY_ENTRY",
         },
         requiredItem: "KeyCard",
-        isAnonymous: true,
         isKeySingle: true,
         spawn: {
             position: [-3, 0.5, 7.25],
             rotationY: 0
+        },
+        interact: {
+            fail: "Locked. There's a card reader on the door",
+            success: "You used the KeyCard and the door beeped"
         }
     }
 ]
@@ -33,11 +36,14 @@ const introTwo = [
             doorId: "A_HALLWAY_EXIT",
         },
         requiredItem: "Blue KeyCard",
-        isAnonymous: false,
         isKeySingle: false,
         spawn: {
             position: [5, 0.5, -7.25],
             rotationY: Math.PI
+        },
+        interact: {
+            fail: "Locked. There's a card reader on the door and a blue symbol",
+            success: "You used the Blue KeyCard and the door beeped"
         }
     }
 ]
@@ -75,4 +81,13 @@ export const applyDoorsFromSave = (savedDoors) => {
         }
     }
 };
+
+export const getDoor = (id) => {
+    for (const levelDoors of Object.values(DOOR_TABLE)) {
+        const door = levelDoors.find((d) => d.id === id);
+        if (door) return door;
+    }
+    return null;
+}
+
 

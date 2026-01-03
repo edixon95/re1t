@@ -4,22 +4,10 @@ let triggerFn = null
 let idCounter = 0
 const LINE_HEIGHT = 34
 
-export const triggerPickupText = (item) => {
-    if (triggerFn && item) {
-        triggerFn(`Picked up ${item.item}`)
-    }
-}
-
-export const interactionAttempt = (isAnonymous, item) => {
-    if (triggerFn) {
-        triggerFn(isAnonymous ? "Requires item" : `Requires ${item}`)
-    }
-}
-
-export const interactionSuccess = (item) => {
-    if (triggerFn) {
-        triggerFn(`Used ${item}`)
-    }
+export const triggerUIText = (string) => {
+    if (!triggerFn || !string)
+        return
+    triggerFn(string)
 }
 
 export const InformationalUI = () => {

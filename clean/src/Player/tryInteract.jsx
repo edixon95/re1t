@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { itemMeshes } from "../managers/ItemManager";
-import { triggerPickupText } from "../UI/InformationalUI";
+import { triggerUIText } from "../UI/InformationalUI";
 import { useItemStore } from "../stores/useItemStore";
 import { useInventoryStore } from "../stores/useInventoryStore";
 
@@ -86,7 +86,8 @@ export const tryInteract = (player, level) => {
         // Try to add to inventory
         if (!!inventoryStore.tryAddInventory(hitItem.userData)) {
             itemStore.pickUpItem(hitItem.userData.id);
-            triggerPickupText(hitItem.userData);
+            const uiText = `You picked up ${hitItem.userData.item}`
+            triggerUIText(uiText)
 
             hitItem.parent.remove(hitItem);
 

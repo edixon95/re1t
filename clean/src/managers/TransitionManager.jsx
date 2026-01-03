@@ -19,7 +19,6 @@ export const TransitionManager = (playerRef, setGameState, isTransitionRef, hand
         if (fromDoor.requiredItem && !fromDoor.isUnlocked) {
             const used = useInventoryStore.getState().tryUseInventoryItemDoor(
                 fromDoor.requiredItem,
-                fromDoor.isAnonymous,
                 fromDoor.isKeySingle,
                 fromDoor.id
             );
