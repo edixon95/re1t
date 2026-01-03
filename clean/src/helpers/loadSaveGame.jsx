@@ -15,25 +15,31 @@ export const loadPlayerTransform = (playerRef, playerSave) => {
 };
 
 
-export const loadPlayerGame = (slot, playerRef) => {
+export const loadPlayerGame = (slot, playerRef, setGameState) => {
     const raw = localStorage.getItem(`save_${slot}`);
     if (!raw) return false;
 
     const saveData = JSON.parse(raw);
 
     applyDoorsFromSave(saveData.doors);
-
     useItemStore.getState().loadItemsFromSave(saveData.items);
     useEnemyStore.getState().loadEnemiesFromSave(saveData.enemies);
     useInventoryStore.getState().loadInventoryFromSave(saveData.inventory);
 
     loadPlayerTransform(playerRef, saveData.player);
 
-    return true;
+    if (saveData?.player?.level) {
+        setGameState((prev) => ({
+            ...prev,
+            level: saveData.player.level
+        }))
+        return true
+    }
+    return false;
 };
 
 
-export const savePlayerGame = (playerRef, slot) => {
+export const savePlayerGame = (slot, playerRef) => {
     const { getItemsForSave } = useItemStore.getState();
     const { getEnemiesForSave } = useEnemyStore.getState();
 
@@ -59,5 +65,5 @@ export const savePlayerGame = (playerRef, slot) => {
         enemies
     };
 
-    console.log("SAVE DATA:", saveData);
+    localStorage.setItem(`save_${slot}`, JSON.stringify(saveData));
 };

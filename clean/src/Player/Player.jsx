@@ -9,7 +9,7 @@ import { tryAttackEnemy } from "./tryAttackEnemy";
 import { useEnemyStore } from "../stores/useEnemyStores";
 import { emitSound } from "../sounds/SoundSystem";
 
-export const menuOpenRef = { current: false };
+export const menuOpenRef = { current: "mainMenu" };
 export const isTransition = { current: false };
 
 export const Player = ({ playerRef, level }) => {
@@ -81,7 +81,7 @@ export const Player = ({ playerRef, level }) => {
     // MENU TOGGLE
     const tabPressed = !!window.keys["KeyQ"];
     if (tabPressed && !prevTabKeyRef.current) {
-      menuOpenRef.current = !menuOpenRef.current;
+      menuOpenRef.current = menuOpenRef.current !== "ingameMenu" ? "ingameMenu" : false;
     }
     prevTabKeyRef.current = tabPressed;
     if (menuOpenRef.current) return;

@@ -17,6 +17,10 @@ export const useItemStore = create((set, get) => ({
     ]
   },
 
+  safeToRender: true, // new flag
+
+  setSafeToRender: (value) => set({ safeToRender: value }),
+
   getAllItems: () => Object.values(get().itemTable).flat(),
 
   pickUpItem: (itemId) =>
@@ -59,14 +63,17 @@ export const useItemStore = create((set, get) => ({
   },
 
   loadItemsFromSave: (savedItems) => {
-    if (!savedItems) return;
+    if (!savedItems) {
+      setTimeout(() => set({ safeToRender: true }), 0);
+      return;
+    }
+
+    set({ safeToRender: false }); // freeze rendering
 
     set((state) => {
       const newTable = { ...state.itemTable };
-
       for (const levelKey in savedItems) {
         if (!newTable[levelKey]) continue;
-
         newTable[levelKey] = newTable[levelKey].map(item => {
           const saved = savedItems[levelKey].find(s => s.id === item.id);
           return saved
@@ -74,9 +81,11 @@ export const useItemStore = create((set, get) => ({
             : item;
         });
       }
-
       return { itemTable: newTable };
     });
+
+    // Allow rendering next tick
+    setTimeout(() => set({ safeToRender: true }), 0);
   },
 
 

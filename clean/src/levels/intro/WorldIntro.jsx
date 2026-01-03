@@ -13,6 +13,7 @@ export const WorldIntro = () => {
 
     const floorRefs = floors.map(() => useRef());
 
+    const safeToRender = useItemStore((state) => state.safeToRender);
     const introItems = useItemStore((state) => state.itemTable.intro);
 
     return (
@@ -52,7 +53,9 @@ export const WorldIntro = () => {
 
             <WallManager floors={floors} />
             <PropManager props={props} />
-            <ItemManager items={introItems} />
+            {safeToRender &&
+                <ItemManager items={introItems} />
+            }
             <DoorManager doors={DOOR_TABLE["intro"]} />
         </>
     );

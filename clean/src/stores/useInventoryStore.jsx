@@ -273,9 +273,10 @@ export const useInventoryStore = create((set, get) => ({
                 return {
                     item: slot.item,
                     amount: slot.amount ?? 1,
-                    cAmmo: slot.cAmmo ?? 0,
-                    mAmmo: slot.mAmmo ?? 0
+                    ...(slot.cAmmo !== undefined && { cAmmo: slot.cAmmo }),
+                    ...(slot.mAmmo !== undefined && { mAmmo: slot.mAmmo }),
                 };
+
             }),
             equippedItem,
             playerHealth,
