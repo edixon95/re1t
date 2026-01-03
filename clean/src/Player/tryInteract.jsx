@@ -3,8 +3,8 @@ import { itemMeshes } from "../managers/ItemManager";
 import { triggerUIText } from "../UI/InformationalUI";
 import { useItemStore } from "../stores/useItemStore";
 import { useInventoryStore } from "../stores/useInventoryStore";
-import { otherMeshes } from "../levelParts/otherMeshes";
 import { menuOpenRef } from "./Player";
+import { otherMeshes } from "../managers/OtherInteractManager";
 
 const interactionRaycaster = new THREE.Raycaster();
 const interactionDirection = new THREE.Vector3();
