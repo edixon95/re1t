@@ -1,6 +1,6 @@
 const intro = {
     world: [{ position: [4, 0, 0], size: [10, 4], color: "#999" }, { position: [-3, 0, 3], size: [4, 10], color: "#999" }],
-    props: [{ position: [2, 0.5, 0], size: [1, 1, 1] }, { position: [-2, 0.5, 3], size: [2, 1, 0.5] }]
+    props: [{ position: [2, 0.2, 0], size: [1, 0.6, 1] }, { position: [-2, 0.5, 3], size: [2, 1, 0.5] }]
 }
 
 const introTwo = {

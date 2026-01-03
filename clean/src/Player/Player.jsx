@@ -9,7 +9,7 @@ import { tryAttackEnemy } from "./tryAttackEnemy";
 import { useEnemyStore } from "../stores/useEnemyStores";
 import { emitSound } from "../sounds/SoundSystem";
 
-export const menuOpenRef = { current: "mainMenu" };
+export const menuOpenRef = { current: "mainMenu", lastClosed: 0, coolDown: 3 };
 export const isTransition = { current: false };
 
 export const Player = ({ playerRef, level }) => {
@@ -76,12 +76,23 @@ export const Player = ({ playerRef, level }) => {
     if (!playerRef?.current) return;
     if (isTransition.current) return;
 
+    // MENU TIMER/GUN TIMER
     const currentTime = state.clock.elapsedTime;
+    const interactionAllowed = currentTime - menuOpenRef.lastClosed >= menuOpenRef.coolDown;
 
     // MENU TOGGLE
     const tabPressed = !!window.keys["KeyE"];
     if (tabPressed && !prevTabKeyRef.current) {
-      menuOpenRef.current = menuOpenRef.current !== "ingameMenu" ? "ingameMenu" : false;
+      if (!menuOpenRef.current) {
+        if (interactionAllowed) {
+          menuOpenRef.current = "ingameMenu";
+        } else {
+          console.log("Menu cooldown active");
+        }
+      } else {
+        menuOpenRef.current = false;
+        menuOpenRef.lastClosed = currentTime;
+      }
     }
     prevTabKeyRef.current = tabPressed;
     if (menuOpenRef.current) return;
@@ -115,7 +126,7 @@ export const Player = ({ playerRef, level }) => {
       }
     } else {
       if (spacePressed && !prevSpaceKeyRef.current) {
-        tryInteract(playerRef.current, level);
+        tryInteract(playerRef.current, level, interactionAllowed);
       }
     }
 

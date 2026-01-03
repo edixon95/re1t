@@ -3,16 +3,19 @@ import { itemMeshes } from "../managers/ItemManager";
 import { triggerUIText } from "../UI/InformationalUI";
 import { useItemStore } from "../stores/useItemStore";
 import { useInventoryStore } from "../stores/useInventoryStore";
+import { otherMeshes } from "../levelParts/otherMeshes";
+import { menuOpenRef } from "./Player";
 
 const interactionRaycaster = new THREE.Raycaster();
 const interactionDirection = new THREE.Vector3();
 
-export const tryInteract = (player, level) => {
+export const tryInteract = (player, level, canOpenMenu) => {
     if (!player) return;
+
     const origin = player.position.clone();
-    const CONE_ANGLE = Math.PI / 4;
-    const INTERACT_DISTANCE = 0.75;
-    const PICKUP_RADIUS = 0.25;
+    const CONE_ANGLE = (2 * Math.PI) / 3;
+    const INTERACT_DISTANCE = 1;
+    const PICKUP_RADIUS = 0.5;
 
     const doorDirection = new THREE.Vector3(0, 0, -1)
         .applyEuler(player.rotation)
@@ -36,11 +39,14 @@ export const tryInteract = (player, level) => {
         }
     }
 
-    const meshes = itemMeshes.map(ref => ref.current).filter(Boolean);
+    const meshes = [...itemMeshes, ...otherMeshes]
+        .map(ref => ref.current)
+        .filter(Boolean);
+
     let hitItem = null;
     let nearestDistance = Infinity;
 
-    const steps = 5;
+    const steps = 11;
     for (let i = -Math.floor(steps / 2); i <= Math.floor(steps / 2); i++) {
         const angleOffset = (i / steps) * CONE_ANGLE;
 
@@ -60,15 +66,16 @@ export const tryInteract = (player, level) => {
         }
     }
 
+    // Fallback: check proximity sphere for pickup
     if (!hitItem) {
         const playerFeet = origin.clone();
         playerFeet.y -= 0.5;
         const sphere = new THREE.Sphere(playerFeet, PICKUP_RADIUS);
 
-        for (const itemRef of meshes) {
-            const box = new THREE.Box3().setFromObject(itemRef);
+        for (const mesh of meshes) {
+            const box = new THREE.Box3().setFromObject(mesh);
             if (box.intersectsSphere(sphere)) {
-                hitItem = itemRef;
+                hitItem = mesh;
                 break;
             }
         }
@@ -76,6 +83,7 @@ export const tryInteract = (player, level) => {
 
     if (!hitItem) return;
 
+    // Handle item pickup
     if (hitItem.userData.type === "item") {
         const itemStore = useItemStore.getState();
         const inventoryStore = useInventoryStore.getState();
@@ -83,11 +91,9 @@ export const tryInteract = (player, level) => {
         const item = itemStore.itemTable[level]?.find(x => x.id === hitItem.userData.id);
         if (!item) return;
 
-        // Try to add to inventory
-        if (!!inventoryStore.tryAddInventory(hitItem.userData)) {
+        if (inventoryStore.tryAddInventory(hitItem.userData)) {
             itemStore.pickUpItem(hitItem.userData.id);
-            const uiText = `You picked up ${hitItem.userData.item}`
-            triggerUIText(uiText)
+            triggerUIText(`You picked up ${hitItem.userData.item}`);
 
             hitItem.parent.remove(hitItem);
 
@@ -95,4 +101,14 @@ export const tryInteract = (player, level) => {
             if (refIndex !== -1) itemMeshes[refIndex].current = null;
         }
     }
+
+    // Custom items go here
+    if (hitItem.userData.type === "saveStation") {
+        if (canOpenMenu) {
+            menuOpenRef.current = "mainMenuSave";
+        } else {
+            console.log("too soon")
+        }
+    };
+
 };
