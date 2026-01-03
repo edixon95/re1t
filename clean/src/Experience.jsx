@@ -5,6 +5,8 @@ import { WorldManager } from "./managers/WorldManager";
 import { TransitionManager } from "./managers/TransitionManager";
 import { EnemyManager } from "./managers/EnemyManger";
 import { DebugSoundSpheres } from "./Player/SoundSphere";
+import { isDevCam } from "./App";
+import { DevCam } from "./tool/DevCam";
 
 export const Experience = ({ playerRef, gameState, setGameState }) => {
     const [region, setRegion] = useState(null);
@@ -30,12 +32,16 @@ export const Experience = ({ playerRef, gameState, setGameState }) => {
             <EnemyManager gameState={gameState} player={playerRef} />
 
             {/* Camera system */}
-            <CameraManager
-                region={region}
-                setRegion={setRegion}
-                gameState={gameState}
-                playerRef={playerRef}
-            />
+            {!isDevCam ?
+                <CameraManager
+                    region={region}
+                    setRegion={setRegion}
+                    gameState={gameState}
+                    playerRef={playerRef}
+                />
+                :
+                <DevCam />
+            }
         </>
     );
 }

@@ -138,7 +138,7 @@ export const PlayerMenuUI = () => {
             if (!open) return;
             const key = e.key.toLowerCase();
 
-            if (key === "control" || key === "ctrl") {
+            if (key === "f" || key === "f") {
                 if (examineText) {
                     setExamineText(null);
                 } else if (contextOpen) {
@@ -181,8 +181,14 @@ export const PlayerMenuUI = () => {
                             attemptCombine();
                         }
                     }
-                    if (key === "control" || key === "ctrl") setCombineSourceIndex(null);
+
+                    if (key === "f") {
+                        setCombineSourceIndex(null);
+                        setFocus("content");
+                        return;
+                    }
                 }
+
 
                 if (contextOpen) {
                     if (examineText) return;
@@ -205,7 +211,7 @@ export const PlayerMenuUI = () => {
                         });
                     }
 
-                    if (key === "control" || key === "ctrl") setContextOpen(false);
+                    if (key === "f" || key === "f") setContextOpen(false);
                     return;
                 }
 
