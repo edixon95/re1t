@@ -8,6 +8,7 @@ import { useRef, useState } from "react";
 import { MainMenu } from "./UI/MainMenu";
 
 export const isDevCam = false
+export const isVisible = false
 
 export const App = () => {
   const playerRef = useRef()

@@ -4,17 +4,17 @@ const intro = [
         self: "intro",
         type: "stair",
         travel: "up",
-        position: [-3, 0, 5],
+        position: [-5, 0, 5],
         size: [2, 2, 3],
         forward: [1, 0, 0],
-        direction: 4,
+        direction: 3,
         leadsTo: {
-            level: "introTwo",
+            level: "introOneUpper",
             doorId: "B_HALLWAY_ENTRY_UPPER",
         },
         spawn: {
-            position: [-3.7, 0.5, 4.3],
-            rotationY: 0
+            position: [-4.3, 0.5, 4.1],
+            rotationY: 4
         },
     },
     {
@@ -31,8 +31,8 @@ const intro = [
         requiredItem: "KeyCard",
         isKeySingle: true,
         spawn: {
-            position: [-3, 0.5, 7.25],
-            rotationY: 0
+            position: [-2, 0.5, 7.25],
+            rotationY: 1
         },
         interact: {
             fail: "Locked. There's a card reader on the door",
@@ -57,7 +57,7 @@ const introTwo = [
         isKeySingle: false,
         spawn: {
             position: [5, 0.5, -7.25],
-            rotationY: Math.PI
+            rotationY: 2
         },
         interact: {
             fail: "Locked. There's a card reader on the door and a blue symbol",
@@ -66,9 +66,31 @@ const introTwo = [
     }
 ]
 
+const introOneUpper = [
+    {
+        id: "B_HALLWAY_ENTRY_UPPER",
+        self: "introOneUpper",
+        type: "stair",
+        travel: "down",
+        position: [2, -2, 5],
+        size: [2, 2, 3],
+        forward: [1, 0, 0],
+        direction: 3,
+        leadsTo: {
+            level: "intro",
+            doorId: "A_HALLWAY_EXIT_STAIR",
+        },
+        spawn: {
+            position: [-1.8, 0.5, 4.3],
+            rotationY: 3
+        },
+    },
+]
+
 export const DOOR_TABLE = {
     intro,
-    introTwo
+    introTwo,
+    introOneUpper
 };
 
 export const getDoorsForSave = () => {

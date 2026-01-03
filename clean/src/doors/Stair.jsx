@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { useMemo } from "react";
+import { isVisible } from "../App";
 
 export const Stair = ({ stair, ref }) => {
     const [width, height, depth] = stair.size;
@@ -64,17 +65,17 @@ export const Stair = ({ stair, ref }) => {
                 userData={{ type: "door", door: stair }}
             >
                 <boxGeometry args={[depth * 0.3, height, width]} />
-                <meshBasicMaterial wireframe color="cyan" />
+                <meshBasicMaterial wireframe color="cyan" visible={isVisible} />
             </mesh>
 
             {/* Collision box */}
             <mesh
                 ref={ref}
                 position={collisionMesh}
-                userData={{ type: "door", door: stair }}
+                userData={{ type: "door", door: stair, isStair: true, travel: stair.travel }}
             >
                 <boxGeometry args={[collisionDepth, collisionHeight, collisionWidth]} />
-                <meshBasicMaterial wireframe />
+                <meshBasicMaterial wireframe visible={isVisible} />
             </mesh>
         </group>
     );

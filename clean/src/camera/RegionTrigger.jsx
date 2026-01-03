@@ -1,8 +1,9 @@
 import { Box3 } from "three";
 import { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
+import { isVisible } from "../App";
 
-export const RegionTrigger =({
+export const RegionTrigger = ({
   playerRef,
   regionId,
   position,
@@ -25,7 +26,7 @@ export const RegionTrigger =({
   return (
     <mesh ref={boxRef} position={position} visible={true}>
       <boxGeometry args={size} />
-      <meshBasicMaterial wireframe />
+      <meshBasicMaterial wireframe visible={isVisible} />
     </mesh>
   );
 }

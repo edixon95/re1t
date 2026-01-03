@@ -2,16 +2,15 @@ import { useRef } from "react";
 import { WallManager } from "../../managers/WallManager";
 import { PropManager } from "../../managers/PropManager";
 import { ItemManager } from "../../managers/ItemManager";
-import { DoorManager } from "../../managers/DoorManager";
+import { DoorManager, doorMeshes } from "../../managers/DoorManager";
 import { DOOR_TABLE } from "../../data/doorTable";
 import { useItemStore } from "../../stores/useItemStore";
 import { LEVEL_TABLE } from "../../data/levelTabel";
-import { OtherInteractManager } from "../../managers/OtherInteractManager";
+import { SaveStation } from "../../levelParts/SaveStation";
 
 export const WorldIntro = () => {
     const floors = LEVEL_TABLE["intro"].world
     const props = LEVEL_TABLE["intro"].props
-    const others = LEVEL_TABLE["intro"].others
 
     const floorRefs = floors.map(() => useRef());
 
@@ -53,7 +52,7 @@ export const WorldIntro = () => {
                 </mesh>
             ))}
 
-            <WallManager floors={floors} />
+            <WallManager floors={floors} doors={doorMeshes} />
             <PropManager props={props} />
             {safeToRender &&
                 <ItemManager items={introItems} />
@@ -61,7 +60,7 @@ export const WorldIntro = () => {
             <DoorManager doors={DOOR_TABLE["intro"]} />
 
             {/* Manual per level */}
-            <OtherInteractManager otherItems={others} />
+            <SaveStation position={[2, 0.65, 0]} />
         </>
     );
 };

@@ -57,7 +57,16 @@ export const TransitionManager = (playerRef, setGameState, isTransitionRef, hand
                     targetDoor.spawn.position[2]
                 );
 
-                playerRef.current.rotation.set(0, targetDoor.spawn.rotationY, 0);
+                const directionToRotationY = {
+                    1: 0,               // facing +Z
+                    2: Math.PI,         // facing -Z
+                    3: Math.PI / 2,     // facing +X
+                    4: -Math.PI / 2,    // facing -X
+                };
+
+                const dir = targetDoor.spawn.rotationY; // now this is 1–4
+                playerRef.current.rotation.set(0, directionToRotationY[dir], 0);
+
 
                 if (isTransitionRef) isTransitionRef.current = false;
                 setGameState((prev) => ({ ...prev, fade: false }));
