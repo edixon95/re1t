@@ -1,17 +1,5 @@
-import { useRef, useEffect } from "react";
-import { otherMeshes } from "./otherMeshes";
-
-export const SaveStation = ({ position, rotation = 1 }) => {
-    const ref = useRef();
+export const SaveStation = ({ position, rotation = 1, ref }) => {
     const yRotation = rotation === 2 ? Math.PI / 2 : 0;
-    useEffect(() => {
-        otherMeshes.push(ref);
-
-        return () => {
-            const index = otherMeshes.indexOf(ref);
-            if (index !== -1) otherMeshes.splice(index, 1);
-        };
-    }, []);
 
     return (
         <mesh

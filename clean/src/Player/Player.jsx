@@ -76,14 +76,25 @@ export const Player = ({ playerRef, level }) => {
     if (!playerRef?.current) return;
     if (isTransition.current) return;
 
-    // MENU TIMER/GUN TIMER
     const currentTime = state.clock.elapsedTime;
-    const interactionAllowed = currentTime - menuOpenRef.lastClosed >= menuOpenRef.coolDown;
 
-    // MENU TOGGLE
+    if (
+      menuOpenRef.previous !== false &&
+      menuOpenRef.current === false
+    ) {
+      menuOpenRef.lastClosed = currentTime;
+    }
+
+    menuOpenRef.previous = menuOpenRef.current;
+
+    const interactionAllowed =
+      menuOpenRef.current === false &&
+      currentTime - menuOpenRef.lastClosed >= menuOpenRef.coolDown;
+
     const tabPressed = !!window.keys["KeyE"];
+
     if (tabPressed && !prevTabKeyRef.current) {
-      if (!menuOpenRef.current) {
+      if (menuOpenRef.current === false) {
         if (interactionAllowed) {
           menuOpenRef.current = "ingameMenu";
         } else {
@@ -91,11 +102,12 @@ export const Player = ({ playerRef, level }) => {
         }
       } else {
         menuOpenRef.current = false;
-        menuOpenRef.lastClosed = currentTime;
       }
     }
+
     prevTabKeyRef.current = tabPressed;
-    if (menuOpenRef.current) return;
+
+    if (menuOpenRef.current !== false) return;
 
     // SPACE ACTION
     const spacePressed = !!window.keys["Space"];
