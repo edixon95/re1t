@@ -13,7 +13,7 @@ const TOTAL_SLOTS = INVENTORY_COLUMNS * INVENTORY_ROWS;
 export const PlayerMenuUI = () => {
     const inventoryRef = useRef(null);
     const [contextStyle, setContextStyle] = useState({});
-    const [open, setOpen] = useState(menuOpenRef.current); // false | "ingameMenu" | "saveMenu" | "loadMenu"
+    const [open, setOpen] = useState(menuOpenRef.current); // false | "ingameMenu"
     const [focus, setFocus] = useState("menu");
     const [menuIndex, setMenuIndex] = useState(0);
     const [inventoryIndex, setInventoryIndex] = useState(0);
