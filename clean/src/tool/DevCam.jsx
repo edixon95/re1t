@@ -28,13 +28,28 @@ export const DevCam = () => {
             if (e.code === "KeyE") keys.current.e = true;
 
             if (e.code === "Space") {
+                const camPos = new THREE.Vector3();
+                camera.getWorldPosition(camPos);
+
                 const dir = new THREE.Vector3();
                 camera.getWorldDirection(dir);
-                const cam = camera.position.clone()
-                const pos = [cam.x, cam.y, cam.z]
-                const direct = [dir.x, dir.y, dir.z]
-                console.log("📷 Position:", pos);
-                console.log("🎯 Look Dir:", direct);
+
+                const lookAt = camPos.clone().add(dir);
+
+                const pos = [
+                    Math.round(camPos.x * 1000) / 1000,
+                    Math.round(camPos.y * 1000) / 1000,
+                    Math.round(camPos.z * 1000) / 1000
+                ];
+
+                const target = [
+                    Math.round(lookAt.x * 1000) / 1000,
+                    Math.round(lookAt.y * 1000) / 1000,
+                    Math.round(lookAt.z * 1000) / 1000
+                ];
+
+                console.log("position:", pos);
+                console.log("lookAt:", target);
             }
         };
 

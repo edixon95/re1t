@@ -17,12 +17,11 @@
     - full inventory
     - empty gun
 
-To add:
+## To add
     - Storage
         - Add storage to save/load. This probably goes into inventory, it's just a second inventory
     - Update PlayerMenuUI to replace the left side headings with storage
         - Context menu and inventory should work together
-    - Door variant: Stairs
     - Multi floor spawning
         - Sometimes able to see a lower floor/interact with an enemy
     - Expand unlock criteria for doors
@@ -43,3 +42,6 @@ To add:
     
     - Map
         - Render 2d map based on door connections and geometry
+
+ ## Added since last made
+    - Stairs

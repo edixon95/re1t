@@ -15,14 +15,18 @@ export const tryInteract = (player, level, canOpenMenu) => {
     const origin = player.position.clone();
     const CONE_ANGLE = (2 * Math.PI) / 3;
     const INTERACT_DISTANCE = 1;
+    const DOOR_INTERACT_DISTANCE = 0.75
     const PICKUP_RADIUS = 0.5;
 
     const doorDirection = new THREE.Vector3(0, 0, -1)
         .applyEuler(player.rotation)
         .normalize();
 
-    interactionRaycaster.set(origin, doorDirection);
-    interactionRaycaster.far = 1.2;
+    const rayStart = origin.clone().add(doorDirection.clone().multiplyScalar(-0.1)); // <- behind by 0.1
+    const rayDistance = DOOR_INTERACT_DISTANCE + 0.1; // extend a little to cover the extra start distance
+
+    interactionRaycaster.set(rayStart, doorDirection);
+    interactionRaycaster.far = rayDistance;
 
     const scene = player.parent;
     if (scene) {
