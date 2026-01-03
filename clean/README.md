@@ -10,3 +10,10 @@
 - Load/Save now added
     - Add currency for saving
     - Start tracking player time, level etc for proper save names, its a bit confusing
+
+- Start adding fail sounds
+    - menu spam
+    - bad combine
+    - full inventory
+    - empty gun
+    
