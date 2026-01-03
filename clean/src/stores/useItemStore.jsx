@@ -14,6 +14,9 @@ export const useItemStore = create((set, get) => ({
       { position: [6, 0.25, -5], size: [0.3, 0.3, 0.3], item: "Blue KeyCard", isCollected: false, id: "introTwo_blueKeyCard_01" },
       { position: [-3, 0.5, 1], size: [0.3, 0.3, 0.3], item: "Uzi", cAmmo: 0, mAmmo: 30, isCollected: false, id: "introTwo_uzi_01" },
       { position: [-3, 0.5, 0.2], size: [0.3, 0.3, 0.3], item: "Uzi Ammo", isCollected: false, id: "introTwo_uziAmmo_01" },
+    ],
+    introOneUpper: [
+      { position: [6, 0.25, -0.8], size: [0.3, 0.3, 0.3], item: "Herb", isCollected: false, id: "intro_herb_01" }
     ]
   },
 

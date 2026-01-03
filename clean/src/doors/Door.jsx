@@ -7,6 +7,7 @@ export const Door = ({ door, ref }) => {
             userData={{
                 type: "door",
                 door,
+                isStair: false
             }}
         >
             <boxGeometry args={door.size} />
