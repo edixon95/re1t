@@ -7,7 +7,7 @@ import { TransitionScreen } from "./managers/TransitionManager";
 import { useRef, useState } from "react";
 import { MainMenu } from "./UI/MainMenu";
 
-export const isDevCam = true
+export const isDevCam = false
 
 export const App = () => {
   const playerRef = useRef()
