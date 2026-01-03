@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { DOOR_TABLE } from "../data/doorTable";
 import { useInventoryStore } from "../stores/useInventoryStore";
 import { isTransition } from "../Player/Player";
-import { interactionAttempt, interactionSuccess } from "../UI/InformationalUI";
 import { useEnemyStore } from "../stores/useEnemyStores";
 import { liveEnemyRefs } from "./EnemyManger";
 
@@ -26,12 +25,8 @@ export const TransitionManager = (playerRef, setGameState, isTransitionRef, hand
             );
 
 
-            if (!used) {
-                interactionAttempt(fromDoor.isAnonymous, fromDoor.requiredItem)
+            if (!used)
                 return;
-            }
-
-            interactionSuccess(fromDoor.requiredItem)
         }
 
         if (isTransitionRef) isTransitionRef.current = true;
@@ -74,27 +69,6 @@ export const TransitionManager = (playerRef, setGameState, isTransitionRef, hand
     window.addEventListener("door:enter", handleDoorEnter);
 
     return () => window.removeEventListener("door:enter", handleDoorEnter);
-};
-
-export const TriggerLoadScreen = (isTransitionRef) => {
-    if (!playerRef || !setGameState) return;
-
-
-    const handleHideScene = () => {
-        setGameState((prev) => ({ ...prev, fade: true }));
-
-        setTimeout(() => {
-            requestAnimationFrame(() => {
-
-                if (isTransitionRef) isTransitionRef.current = false;
-                setGameState((prev) => ({ ...prev, fade: false }));
-            });
-        }, 700);
-    };
-
-    window.addEventListener("game:load", handleHideScene);
-
-    return () => window.removeEventListener("game:load", handleHideScene);
 };
 
 export const TransitionScreen = () => {

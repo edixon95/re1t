@@ -1,6 +1,8 @@
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState } from "react"
 
 let triggerFn = null
+let idCounter = 0
+const LINE_HEIGHT = 34
 
 export const triggerPickupText = (item) => {
     if (triggerFn && item) {
@@ -10,11 +12,7 @@ export const triggerPickupText = (item) => {
 
 export const interactionAttempt = (isAnonymous, item) => {
     if (triggerFn) {
-        if (isAnonymous) {
-            triggerFn(`Requires item`)
-        } else {
-            triggerFn(`Requires ${item}`)
-        }
+        triggerFn(isAnonymous ? "Requires item" : `Requires ${item}`)
     }
 }
 
@@ -25,32 +23,36 @@ export const interactionSuccess = (item) => {
 }
 
 export const InformationalUI = () => {
-    const [text, setText] = useState("")
-    const [visible, setVisible] = useState(false)
-    const timeoutRef = useRef(null)
+    const [messages, setMessages] = useState([])
 
     useEffect(() => {
-        triggerFn = (message) => {
-            setText(message)
-            setVisible(true)
+        triggerFn = (text) => {
+            const id = idCounter++
 
-            if (timeoutRef.current) {
-                clearTimeout(timeoutRef.current)
-            }
+            setMessages((prev) => [
+                ...prev,
+                { id, text, visible: true }
+            ])
 
-            timeoutRef.current = setTimeout(() => {
-                setVisible(false)
-                timeoutRef.current = null
+            // Fade out
+            setTimeout(() => {
+                setMessages((prev) =>
+                    prev.map((m) =>
+                        m.id === id ? { ...m, visible: false } : m
+                    )
+                )
+            }, 4500)
+
+            // Remove
+            setTimeout(() => {
+                setMessages((prev) => prev.filter((m) => m.id !== id))
             }, 5500)
         }
 
         return () => {
             triggerFn = null
-            if (timeoutRef.current) clearTimeout(timeoutRef.current)
         }
     }, [])
-
-    if (!text) return null
 
     return (
         <div
@@ -58,16 +60,33 @@ export const InformationalUI = () => {
                 position: "absolute",
                 bottom: "10%",
                 left: "10%",
-                textAlign: "center",
                 pointerEvents: "none",
-                opacity: visible ? 1 : 0,
-                transition: "opacity 1s ease",
-                fontSize: "28px",
-                color: "white",
-                textShadow: "2px 2px 6px black",
+                width: "500px",
+                height: "300px",
             }}
         >
-            {text}
+            {messages.map((msg, index) => {
+                const offsetFromBottom =
+                    (messages.length - 1 - index) * LINE_HEIGHT
+
+                return (
+                    <div
+                        key={msg.id}
+                        style={{
+                            position: "absolute",
+                            bottom: offsetFromBottom,
+                            opacity: msg.visible ? 1 : 0,
+                            transition: "opacity 1s ease",
+                            fontSize: "28px",
+                            color: "white",
+                            textShadow: "2px 2px 6px black",
+                            whiteSpace: "nowrap",
+                        }}
+                    >
+                        {msg.text}
+                    </div>
+                )
+            })}
         </div>
     )
 }
