@@ -131,6 +131,7 @@ export const PlayerMenuUI = () => {
         });
     }, [contextOpen, inventoryIndex]);
 
+
     // Keyboard input
     useEffect(() => {
         const onKeyDown = (e) => {
@@ -155,15 +156,20 @@ export const PlayerMenuUI = () => {
                 if (key === "w") setMenuIndex(i => Math.max(0, i - 1));
                 if (key === "s") setMenuIndex(i => Math.min(menuOptions.length - 1, i + 1));
 
+                // Press Space to open menu item
                 if (key === " " && menuOptions[menuIndex]) {
                     const selected = menuOptions[menuIndex];
-
                     if (selected === "Inventory") setFocus("content");
                     else if (selected === "Map") console.log("Open Map");
                     else if (selected === "Options") console.log("Open Options");
                 }
-                return;
+
+                // Press D to go into inventory if Inventory is highlighted
+                if (key === "d" && menuOptions[menuIndex] === "Inventory") {
+                    setFocus("content");
+                }
             }
+
 
             if (focus === "content" && open === "ingameMenu" && activeMenu === "Inventory") {
                 const slot = fullInventory[inventoryIndex];
