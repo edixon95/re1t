@@ -1,6 +1,6 @@
 import { create } from "zustand"
-import { DOOR_TABLE } from "../data/doorTable"
-import { interactionAttempt, interactionSuccess } from "../UI/InformationalUI"
+import { DOOR_TABLE, getDoor } from "../data/doorTable"
+import { triggerUIText } from "../UI/InformationalUI"
 import { AMMO_TABLE } from "../data/ammoTable"
 import { WEAPON_TABLE } from "../data/weaponTable"
 import { useItemStore } from "./useItemStore"
@@ -226,11 +226,14 @@ export const useInventoryStore = create((set, get) => ({
         return true;
     },
 
-    tryUseInventoryItemDoor: (requestedItem, isAnonymous, isSingleUse, usedOnDoorId) => {
+    tryUseInventoryItemDoor: (requestedItem, isSingleUse, usedOnDoorId) => {
         const { inventory } = get()
         const idx = inventory.findIndex(x => x?.item === requestedItem)
+        const door = getDoor(usedOnDoorId)
+        if (!door) return;
         if (idx === -1) {
-            interactionAttempt(isAnonymous, requestedItem)
+            const uiText = door.interact.fail
+            triggerUIText(uiText)
             return false
         }
 
@@ -245,7 +248,8 @@ export const useInventoryStore = create((set, get) => ({
                 }
 
                 DOOR_TABLE[levelKey][doorIdx].isUnlocked = true
-                interactionSuccess(requestedItem)
+                const uiText = door.interact.success
+                triggerUIText(uiText)
                 return true
             }
         }
