@@ -45,3 +45,6 @@
 
  ## Added since last made
     - Stairs
+        - Stair cutouts howto:
+            Stairs going up, just add new floor, current wall building will work for it
+            Stairs going down, skip: true, add a direction
