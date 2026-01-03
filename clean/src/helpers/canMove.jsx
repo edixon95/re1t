@@ -10,7 +10,6 @@ export const canMove = (playerPos, playerRot, forwardVec, distance = 0.5, buffer
     const direction = forwardVec.clone().applyEuler(playerRot).normalize();
 
     const raycaster = new THREE.Raycaster(origin, direction, 0, distance + buffer);
-    console.log(doorMeshes)
     const meshes = [
         ...wallMeshes.map(r => r.current).filter(Boolean),
         ...propMeshes.map(r => r.current).filter(Boolean),

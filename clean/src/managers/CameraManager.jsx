@@ -5,7 +5,6 @@ import { RegionTrigger } from "../camera/RegionTrigger"
 export const CameraManager = ({ region, setRegion, gameState, playerRef }) => {
     const level = gameState.level
     const camerasForLevel = CAMERA_TABLE[level]
-    console.log(camerasForLevel)
 
     if (!camerasForLevel) return null
 

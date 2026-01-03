@@ -4,7 +4,6 @@ import { useMemo } from "react";
 export const Stair = ({ stair, ref }) => {
     const [width, height, depth] = stair.size;
 
-    // slope geometry
     const slopeGeometry = useMemo(() => {
         const shape = new THREE.Shape();
         shape.moveTo(0, 0);
@@ -16,7 +15,7 @@ export const Stair = ({ stair, ref }) => {
             depth: width,
             bevelEnabled: false,
         });
-        geom.computeBoundingBox(); // compute the bounding box
+        geom.computeBoundingBox();
         return geom;
     }, [width, height, depth]);
 
