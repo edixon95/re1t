@@ -9,7 +9,7 @@ import { tryAttackEnemy } from "./tryAttackEnemy";
 import { useEnemyStore } from "../stores/useEnemyStores";
 import { emitSound } from "../sounds/SoundSystem";
 
-export const menuOpenRef = { current: "mainMenu", lastClosed: 0, coolDown: 3 };
+export const menuOpenRef = { current: "mainMenu", lastClosed: 0, coolDown: 1 };
 export const isTransition = { current: false };
 
 export const Player = ({ playerRef, level }) => {
@@ -76,7 +76,7 @@ export const Player = ({ playerRef, level }) => {
     if (!playerRef?.current) return;
     if (isTransition.current) return;
 
-    const currentTime = state.clock.elapsedTime;
+    const currentTime = performance.now() / 1000;
 
     if (
       menuOpenRef.previous !== false &&
