@@ -102,6 +102,8 @@ const introOneUpper = [
             position: [-1.8, 0.5, 4.3],
             rotationY: 3
         },
+        cutsceneId: "test_cutscene_two",
+        isSceneViewed: false
     },
 ]
 
@@ -153,6 +155,17 @@ export function hasInteractedWithDoor(id) {
         const door = levelDoors.find(d => d.id === id);
         if (door && door.interact) {
             door.interact.isInteractedWith = true;
+            return true;
+        }
+    }
+    return false;
+}
+
+export function hasViewedScene(id) {
+    for (const levelDoors of Object.values(DOOR_TABLE)) {
+        const door = levelDoors.find(d => d.id === id);
+        if (door) {
+            door.isSceneViewed = true;
             return true;
         }
     }

@@ -12,7 +12,7 @@ import { emitSound } from "../sounds/SoundSystem";
 export const menuOpenRef = { current: "mainMenu", lastClosed: 0, coolDown: 1 };
 export const isTransition = { current: false };
 
-export const Player = ({ playerRef, level }) => {
+export const Player = ({ playerRef, level, isVisible }) => {
   const aimingRef = useRef(false);
   const prevAimKeyRef = useRef(false);
   const prevSpaceKeyRef = useRef(false);
@@ -244,6 +244,7 @@ export const Player = ({ playerRef, level }) => {
       position={[8, 0.5, 0]}
       rotation={[0, Math.PI / 2, 0]}
       castShadow
+      visible={isVisible}
     >
       <boxGeometry args={[0.5, 1, 0.5]} />
       <meshStandardMaterial color="red" />
