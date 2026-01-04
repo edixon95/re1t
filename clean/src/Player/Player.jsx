@@ -138,7 +138,6 @@ export const Player = ({ playerRef, level }) => {
       }
     } else {
       if (spacePressed && !prevSpaceKeyRef.current) {
-        console.log("try interact pressed")
         tryInteract(playerRef.current, level, interactionAllowed);
       }
     }
