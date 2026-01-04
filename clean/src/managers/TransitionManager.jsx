@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
-import { DOOR_TABLE } from "../data/doorTable";
-import { useInventoryStore } from "../stores/useInventoryStore";
-import { isTransition, menuOpenRef } from "../Player/Player";
+import { DOOR_TABLE, getDoor, hasViewedScene } from "../data/doorTable";
+import { isTransition } from "../Player/Player";
 import { useEnemyStore } from "../stores/useEnemyStores";
 import { liveEnemyRefs } from "./EnemyManger";
 import { pendingDoorUseRef } from "../UI/PlayerMenuUI";
@@ -12,13 +11,23 @@ export const TransitionManager = (playerRef, setGameState, isTransitionRef, hand
 
     const handleDoorEnter = (e) => {
         const fromDoor = e.detail;
-        const targetLevel = fromDoor.leadsTo?.level;
-        const targetDoorId = fromDoor.leadsTo?.doorId;
+        const door = getDoor(fromDoor.id)
+        if (!door) return;
 
-        if (!targetLevel || !targetDoorId) return;
+        // Door has a cutscene
+        if (door?.cutsceneId && !door.isSceneViewed) {
+            // set door to viewed
+            setGameState((prev) => ({
+                ...prev,
+                mode: "cutscene",
+                cutsceneId: door?.cutsceneId
+            }))
+            hasViewedScene(door.id)
+            return;
+        }
 
-        if (fromDoor.requiredItem && !fromDoor.isUnlocked) {
-            pendingDoorUseRef.current = fromDoor.id;
+        if (door.requiredItem && !door.isUnlocked) {
+            pendingDoorUseRef.current = door.id;
             window.dispatchEvent(
                 new CustomEvent("trigger:interactPrompt", { detail: "door" }));
             return;
@@ -28,10 +37,11 @@ export const TransitionManager = (playerRef, setGameState, isTransitionRef, hand
         if (isTransitionRef) isTransitionRef.current = true;
 
         // Lazy add, not changing it
-        useEnemyStore.getState().saveEnemyPosition(fromDoor.self, liveEnemyRefs)
+        useEnemyStore.getState().saveEnemyPosition(door.self, liveEnemyRefs)
 
         setGameState((prev) => ({ ...prev, fade: true }));
-
+        const targetLevel = door.leadsTo?.level;
+        const targetDoorId = door.leadsTo?.doorId;
         setTimeout(() => {
             setGameState((prev) => ({ ...prev, level: targetLevel }));
             handleUpdatePlayerRef(targetLevel)

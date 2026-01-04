@@ -27,9 +27,9 @@ export const Experience = ({ playerRef, gameState, setGameState }) => {
             <WorldManager gameState={gameState} />
 
             {/* Player */}
+            <Player playerRef={playerRef} level={gameState.level} isVisible={gameState.mode === "game"} />
             {gameState.mode === "game" &&
                 <>
-                    <Player playerRef={playerRef} level={gameState.level} />
                     <DebugSoundSpheres />
                     <EnemyManager gameState={gameState} player={playerRef} />
                 </>

@@ -18,7 +18,6 @@ export const App = () => {
     mode: "game", // game/cutscene
     cutsceneId: null
   }
-
   const testFromCutscene = {
     level: "test_cutscene",
     mode: "cutscene",
