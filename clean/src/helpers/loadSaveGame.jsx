@@ -3,19 +3,8 @@ import { useEnemyStore } from "../stores/useEnemyStores"
 import { useInventoryStore } from "../stores/useInventoryStore"
 import { useItemStore } from "../stores/useItemStore"
 
-export const loadPlayerTransform = (playerRef, playerSave) => {
-    if (!playerRef?.current || !playerSave) return;
 
-    const [px, py, pz] = playerSave.position;
-    const [rx, ry, rz] = playerSave.rotation;
-
-    playerRef.current.position.set(px, py, pz);
-    playerRef.current.rotation.set(rx, ry, rz);
-    playerRef.current.level = playerSave.level;
-};
-
-
-export const loadPlayerGame = (slot, playerRef, setGameState) => {
+export const loadPlayerGame = (slot, setGameState) => {
     const raw = localStorage.getItem(`save_${slot}`);
     if (!raw) return false;
 
@@ -26,14 +15,14 @@ export const loadPlayerGame = (slot, playerRef, setGameState) => {
     useEnemyStore.getState().loadEnemiesFromSave(saveData.enemies);
     useInventoryStore.getState().loadInventoryFromSave(saveData.inventory);
 
-    loadPlayerTransform(playerRef, saveData.player);
 
     if (saveData?.player?.level) {
         setGameState((prev) => ({
             ...prev,
-            level: saveData.player.level
+            level: saveData.player.level,
+            mode: "game"
         }))
-        return true
+        return saveData.player
     }
     return false;
 };
@@ -64,6 +53,5 @@ export const savePlayerGame = (slot, playerRef) => {
         items,
         enemies
     };
-
     localStorage.setItem(`save_${slot}`, JSON.stringify(saveData));
 };

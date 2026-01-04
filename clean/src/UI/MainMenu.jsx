@@ -24,13 +24,35 @@ export const MainMenu = ({ playerRef, gameState, setGameState }) => {
             }
         };
 
-        // Run once immediately
         syncMenu();
 
         // Sync continuously
         const interval = setInterval(syncMenu, 16); // ~60fps
         return () => clearInterval(interval);
     }, []);
+
+    const [pendingPlayer, setPendingPlayer] = useState(false)
+
+    const loadPlayerTransform = (playerRef, playerSave) => {
+        if (!playerRef?.current || !playerSave) return;
+
+        const [px, py, pz] = playerSave.position;
+        const [rx, ry, rz] = playerSave.rotation;
+
+        playerRef.current.position.set(px, py, pz);
+        playerRef.current.rotation.set(rx, ry, rz);
+        playerRef.current.level = playerSave.level;
+    };
+
+
+    useEffect(() => {
+        if (pendingPlayer && gameState.mode === "game") {
+            setTimeout(() => {
+                loadPlayerTransform(playerRef, pendingPlayer)
+                setPendingPlayer(false)
+            }, 0)
+        }
+    }, [pendingPlayer, gameState.mode])
 
 
     useEffect(() => {
@@ -64,7 +86,8 @@ export const MainMenu = ({ playerRef, gameState, setGameState }) => {
                         playerRef.current.level = gameState.level;
                         savePlayerGame(slotIndex + 1, playerRef.current); // Save to slot 1-5
                     } else {
-                        loadPlayerGame(slotIndex + 1, playerRef, setGameState); // Load slot 1-5
+                        const playerLocation = loadPlayerGame(slotIndex + 1, setGameState); // Load slot 1-5
+                        setPendingPlayer(playerLocation)
                     }
                     setOpen(false);
                     menuOpenRef.current = false;
