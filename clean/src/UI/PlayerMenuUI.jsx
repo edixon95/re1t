@@ -10,8 +10,14 @@ const INVENTORY_COLUMNS = 4;
 const INVENTORY_ROWS = 3;
 const TOTAL_SLOTS = INVENTORY_COLUMNS * INVENTORY_ROWS;
 
+export const pendingDoorUseRef = {
+    current: null,
+};
+
+
 export const PlayerMenuUI = () => {
     const inventoryRef = useRef(null);
+
     const [contextStyle, setContextStyle] = useState({});
     const [open, setOpen] = useState(menuOpenRef.current); // false | "ingameMenu"
     const [focus, setFocus] = useState("menu");
@@ -38,10 +44,11 @@ export const PlayerMenuUI = () => {
         return getValidCombineTargets(combineSourceItem);
     }, [combineSourceItem]);
 
-    // Menu definitions
     const MENU_OPTIONS = {
-        ingameMenu: ["Inventory", "Map", "Options"], // removed Save/Load
+        ingameMenu: ["Inventory", "Map", "Options"],
+        ingameMenuUseItem: ["Inventory"],
     };
+
 
     const menuOptions = useMemo(() => {
         if (!open) return [];
@@ -104,6 +111,14 @@ export const PlayerMenuUI = () => {
         }
     }, [open]);
 
+    // Force into inventory on interact
+    useEffect(() => {
+        if (open === "ingameMenuUseItem") {
+            setFocus("content");
+        }
+    }, [open]);
+
+
     // Context menu positioning
     useEffect(() => {
         if (!contextOpen) {
@@ -131,6 +146,39 @@ export const PlayerMenuUI = () => {
         });
     }, [contextOpen, inventoryIndex]);
 
+    const getContextOptions = (slot) => {
+        if (!slot) return [];
+
+        const baseOptions = ITEM_INTERACT_TABLE[slot.item]?.Options ?? [];
+        console.log(baseOptions)
+        if (open === "ingameMenuUseItem") {
+            return [
+                {
+                    label: "Use",
+                    action: () => {
+                        const success = useInventoryStore
+                            .getState()
+                            .tryUseInventoryItemDoor(
+                                slot.item,
+                                inventoryIndex,
+                                pendingDoorUseRef.current
+                            );
+
+                        if (success) {
+                            pendingDoorUseRef.current = null;
+                            menuOpenRef.current = false;
+                            setContextOpen(false);
+                        }
+                    },
+                },
+                ...baseOptions.filter(o => o.label === "Examine"),
+            ];
+        }
+
+        return baseOptions;
+    };
+
+
 
     // Keyboard input
     useEffect(() => {
@@ -138,18 +186,34 @@ export const PlayerMenuUI = () => {
             if (!open) return;
             const key = e.key.toLowerCase();
 
-            if (key === "f" || key === "f") {
+            if (key === "f") {
                 if (examineText) {
                     setExamineText(null);
-                } else if (contextOpen) {
+                    return;
+                }
+
+                if (contextOpen) {
                     setContextOpen(false);
-                } else if (focus === "content") {
-                    setFocus("menu");
-                } else {
+                    return;
+                }
+
+                // if forced inventory from interact
+                if (open === "ingameMenuUseItem") {
+                    pendingDoorUseRef.current = null;
                     menuOpenRef.current = false;
                     setOpen(false);
+                    return;
                 }
+
+                if (focus === "content") {
+                    setFocus("menu");
+                    return;
+                }
+
+                menuOpenRef.current = false;
+                setOpen(false);
             }
+
 
 
             if (focus === "menu") {
@@ -171,7 +235,11 @@ export const PlayerMenuUI = () => {
             }
 
 
-            if (focus === "content" && open === "ingameMenu" && activeMenu === "Inventory") {
+            if (
+                focus === "content" &&
+                (open === "ingameMenu" && activeMenu === "Inventory" || open === "ingameMenuUseItem")
+            ) {
+
                 const slot = fullInventory[inventoryIndex];
                 const col = inventoryIndex % INVENTORY_COLUMNS;
 
@@ -197,17 +265,18 @@ export const PlayerMenuUI = () => {
                         return;
                     }
 
-                    const options = ITEM_INTERACT_TABLE[slot.item]?.Options ?? [];
                     if (key === "w") setContextIndex(i => Math.max(0, i - 1));
                     if (key === "s") setContextIndex(i => Math.min(options.length - 1, i + 1));
 
+                    const options = getContextOptions(slot);
+                    console.log(options)
                     if (key === " ") {
                         const option = options[contextIndex];
                         option?.action({
                             openExamine: setExamineText,
                             equipUnequip: handleTryEquip,
                             consumeItem: () => useItemByIndex(inventoryIndex),
-                            beginCombine
+                            beginCombine,
                         });
                     }
 
@@ -242,44 +311,63 @@ export const PlayerMenuUI = () => {
         fullInventory
     ]);
 
-    if (open !== "ingameMenu") return null;
+    if (open !== "ingameMenu" && open !== "ingameMenuUseItem") return null;
 
     return (
         <div style={{ position: "absolute", inset: 0, background: "black", color: "white", display: "flex", justifyContent: "center", alignItems: "center" }}>
             {/* Left menu */}
-            <div style={{ width: "20%", height: "80%", background: "red", display: "flex", flexDirection: "column", justifyContent: "space-around", padding: 20 }}>
-                {menuOptions.map((op, i) => (
-                    <h1 key={op} style={{ color: focus === "menu" && i === menuIndex ? "yellow" : "white" }}>
-                        {op.toUpperCase()}
-                    </h1>
-                ))}
-            </div>
+            {open === "ingameMenu" &&
+                <div style={{ width: "20%", height: "80%", background: "red", display: "flex", flexDirection: "column", justifyContent: "space-around", padding: 20 }}>
+                    {menuOptions.map((op, i) => (
+                        <h1 key={op} style={{ color: focus === "menu" && i === menuIndex ? "yellow" : "white" }}>
+                            {op.toUpperCase()}
+                        </h1>
+                    ))}
+                </div>
+            }
 
             {/* Right content */}
-            <div style={{ position: "relative", width: "80%", height: "80%", background: "red" }}>
-                {open === "ingameMenu" && activeMenu === "Inventory" && (
-                    <>
-                        <InventoryWindow
-                            selectedIndex={inventoryIndex}
-                            focused={focus === "content"}
-                            inventory={fullInventory}
-                            equipped={equippedItem}
-                            combineSourceIndex={combineSourceIndex}
-                            validCombineTargets={validCombineTargets}
-                            containerRef={inventoryRef}
-                        />
+            <div style={{
+                position: "relative",
+                width: open === "ingameMenuUseItem" ? "100%" : "80%",
+                height: "80%", background: "red"
+            }}>
+                {(
+                    (open === "ingameMenu" && activeMenu === "Inventory") ||
+                    open === "ingameMenuUseItem"
+                ) && (
+                        <>
+                            <InventoryWindow
+                                selectedIndex={inventoryIndex}
+                                focused={focus === "content"}
+                                inventory={fullInventory}
+                                equipped={equippedItem}
+                                combineSourceIndex={combineSourceIndex}
+                                validCombineTargets={validCombineTargets}
+                                containerRef={inventoryRef}
+                            />
 
-                        {contextOpen && fullInventory[inventoryIndex] && (
-                            <div style={contextStyle}>
-                                {ITEM_INTERACT_TABLE[fullInventory[inventoryIndex].item].Options.map((op, i) => (
-                                    <div key={op.label} style={{ color: i === contextIndex ? "yellow" : "white", padding: "4px 8px" }}>
-                                        {equippedItem.equipped === fullInventory[inventoryIndex].item && op.label === "Equip" ? "Unequip" : op.label}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </>
-                )}
+                            {contextOpen && fullInventory[inventoryIndex] && (
+                                <div style={contextStyle}>
+                                    {getContextOptions(fullInventory[inventoryIndex]).map((op, i) => (
+                                        <div
+                                            key={op.label}
+                                            style={{
+                                                color: i === contextIndex ? "yellow" : "white",
+                                                padding: "4px 8px",
+                                            }}
+                                        >
+                                            {equippedItem.equipped === fullInventory[inventoryIndex].item &&
+                                                op.label === "Equip"
+                                                ? "Unequip"
+                                                : op.label}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                        </>
+                    )}
 
                 {examineText && (
                     <div style={{ position: "absolute", inset: "20%", background: "black", border: "2px solid white", padding: 20, fontSize: "20px" }}>

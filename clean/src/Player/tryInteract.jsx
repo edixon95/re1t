@@ -22,8 +22,9 @@ export const tryInteract = (player, level, canOpenMenu) => {
         .applyEuler(player.rotation)
         .normalize();
 
-    const rayStart = origin.clone().add(doorDirection.clone().multiplyScalar(-0.1)); // <- behind by 0.1
-    const rayDistance = DOOR_INTERACT_DISTANCE + 0.1; // extend a little to cover the extra start distance
+    // pull back cast slightly
+    const rayStart = origin.clone().add(doorDirection.clone().multiplyScalar(-0.1));
+    const rayDistance = DOOR_INTERACT_DISTANCE + 0.1;
 
     interactionRaycaster.set(rayStart, doorDirection);
     interactionRaycaster.far = rayDistance;
