@@ -180,7 +180,7 @@ export const useInventoryStore = create((set, get) => ({
         return true;
     },
 
-    tryReloadWeapon: (weaponName) => {
+    tryReloadWeapon: (weaponName, ammoIndex) => {
         const { inventory } = get();
         const weaponIdx = inventory.findIndex(x => x?.item === weaponName);
         if (weaponIdx === -1) return false;
@@ -188,9 +188,12 @@ export const useInventoryStore = create((set, get) => ({
         const ammoType = AMMO_TABLE[weaponName];
         if (!ammoType) return false;
 
-        const ammoIdx = inventory.findIndex(x => x?.item === ammoType.item);
-        if (ammoIdx === -1) return false;
+        // Use the provided ammoIndex if valid, otherwise fallback to first
+        const ammoIdx = (ammoIndex !== undefined && inventory[ammoIndex]?.item === ammoType.item)
+            ? ammoIndex
+            : inventory.findIndex(x => x?.item === ammoType.item);
 
+        if (ammoIdx === -1) return false;
 
         const newInventory = [...inventory];
         const ammoFromPack = stingometer(ammoType.minAmmo, ammoType.maxAmmo);
@@ -207,8 +210,9 @@ export const useInventoryStore = create((set, get) => ({
         }
 
         set({ inventory: newInventory, equippedItem: { ...get().equippedItem, cAmmo: ammoTotal } });
-
+        return true;
     },
+
 
     craftItemsByIndex: (idxA, idxB, resultItem) => {
         if (idxA === idxB) return false;
