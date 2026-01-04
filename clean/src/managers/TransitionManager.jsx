@@ -17,21 +17,10 @@ export const TransitionManager = (playerRef, setGameState, isTransitionRef, hand
 
         if (!targetLevel || !targetDoorId) return;
 
-        // if (fromDoor.requiredItem && !fromDoor.isUnlocked) {
-        //     const used = useInventoryStore.getState().tryUseInventoryItemDoor(
-        //         fromDoor.requiredItem,
-        //         fromDoor.isKeySingle,
-        //         fromDoor.id
-        //     );
-
-
-        //     if (!used)
-        //         return;
-        // }
-
         if (fromDoor.requiredItem && !fromDoor.isUnlocked) {
             pendingDoorUseRef.current = fromDoor.id;
-            window.dispatchEvent(new CustomEvent("trigger:interactPrompt"));
+            window.dispatchEvent(
+                new CustomEvent("trigger:interactPrompt", { detail: "door" }));
             return;
         }
 

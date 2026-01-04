@@ -5,6 +5,7 @@ import { menuOpenRef } from "../Player/Player";
 import { InventoryWindow } from "./InventoryUI";
 import { ITEM_INTERACT_TABLE } from "../data/itemInteractTable";
 import { resolveCombine, getValidCombineTargets } from "../helpers/getValidCombineTargets";
+import { getDoor, hasInteractedWithDoor } from "../data/doorTable";
 
 const INVENTORY_COLUMNS = 4;
 const INVENTORY_ROWS = 3;
@@ -120,8 +121,29 @@ export const PlayerMenuUI = () => {
         }
     }, [open]);
 
+    const [promptText, setPromptText] = useState("")
+
+    const handleInteractTextDoor = (id) => {
+        const door = getDoor(id)
+        if (!door) return false;
+        const isInteractedWith = door.interact.isInteractedWith
+        const interactText = isInteractedWith ? [door.interact.after] : [door.interact.initial, door.interact.after]
+        if (!isInteractedWith) {
+            hasInteractedWithDoor(id)
+        }
+        setPromptText(interactText)
+
+        return true
+    }
+
     useEffect(() => {
-        const handler = () => {
+        const handler = (event) => {
+            if (event.detail === "door") {
+                handleInteractTextDoor(pendingDoorUseRef.current)
+            } else {
+                // todo, triggers for puzzles
+                console.log("something else")
+            }
             setInteractPromptOpen(true)
             menuOpenRef.current = "prompt"
         };
@@ -161,6 +183,7 @@ export const PlayerMenuUI = () => {
         if (!slot) return [];
 
         const baseOptions = ITEM_INTERACT_TABLE[slot.item]?.Options ?? [];
+        // TODO: Puzzle intergration/Button intergration will have to go here
         if (open === "ingameMenuUseItem") {
             return [
                 {
@@ -185,6 +208,11 @@ export const PlayerMenuUI = () => {
 
         return baseOptions;
     };
+    const resetAllMenuRef = () => {
+        menuOpenRef.current = null
+        pendingDoorUseRef.current = null;
+        setPromptText("")
+    }
 
     // Keyboard input
     useEffect(() => {
@@ -214,6 +242,7 @@ export const PlayerMenuUI = () => {
                         menuOpenRef.current = false
                     }
                     setInteractPromptOpen(false);
+                    setPromptText("")
                     setInteractPromptIndex(0);
                 }
 
@@ -221,8 +250,7 @@ export const PlayerMenuUI = () => {
                 if (key === "f") {
                     setInteractPromptOpen(false);
                     setInteractPromptIndex(0);
-                    menuOpenRef.current = false
-                    pendingDoorUseRef.current = null;
+                    resetAllMenuRef()
                 }
 
                 return; // stop all other input while prompt is open
@@ -431,8 +459,13 @@ export const PlayerMenuUI = () => {
                             textAlign: "center",
                         }}
                     >
-                        <div style={{ marginBottom: 20, fontSize: 24 }}>
-                            Do you want to interact with this thing?
+                        <div style={{ marginBottom: 20, fontSize: 24, whiteSpace: 'pre-wrap' }}>
+
+                            {promptText && promptText.length > 0 &&
+                                promptText.map((t) => (
+                                    <p>{t}</p>
+                                ))
+                            }
                         </div>
                         <div style={{ display: "flex", justifyContent: "center", gap: 20 }}>
                             {["Yes", "Cancel"].map((opt, i) => (
