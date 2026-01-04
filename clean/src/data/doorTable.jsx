@@ -35,8 +35,17 @@ const intro = [
             rotationY: 1
         },
         interact: {
-            fail: "Locked. There's a card reader on the door",
-            success: "You used the KeyCard and the door beeped"
+            isInteractedWith: false,
+            initial: "It doesn't open. There's a card reader attached to the front.",
+            after: "Try to put something in the reader?",
+            fail: "You press the {item} into the reader, nothing happened",
+            success: "You used the KeyCard and the door beeped",
+            specialFail: {
+                Herb: "You press the herbs into the reader, the room smells slightly fresher. The door is still locked.",
+                HerbHerb: "You press the herbs into the reader, the room smells extra fresh and the door remains locked",
+                "Colt Ammo": "You press the bullets into the reader, one gets slightly wedged and you push it out. Did the door just laugh at you?",
+                Colt: "You press the barrel of the colt into the reader, leaving a scratch on the still locked door"
+            }
         }
     }
 ]
@@ -60,8 +69,17 @@ const introTwo = [
             rotationY: 2
         },
         interact: {
-            fail: "Locked. There's a card reader on the door and a blue symbol",
-            success: "You used the Blue KeyCard and the door beeped"
+            isInteractedWith: false,
+            initial: "It doesn't open. There's a card reader attached to the front, this time it's blue.",
+            after: "Try to put something in the blue reader?",
+            fail: "You press the {item} into the reader, nothing happened",
+            success: "You used the Blue KeyCard and the door beeped",
+            specialFail: {
+                Herb: "You press the herbs into the reader, the room smells slightly fresher. The door is still locked.",
+                HerbHerb: "You press the herbs into the reader, the room smells extra fresh and the door remains locked",
+                "Colt Ammo": "You press the bullets into the reader, one gets slightly wedged and you push it out. Did the door just laugh at you?",
+                Colt: "You press the barrel of the colt into the reader, leaving a scratch on the still locked door"
+            }
         }
     }
 ]
@@ -128,6 +146,17 @@ export const getDoor = (id) => {
         if (door) return door;
     }
     return null;
+}
+
+export function hasInteractedWithDoor(id) {
+    for (const levelDoors of Object.values(DOOR_TABLE)) {
+        const door = levelDoors.find(d => d.id === id);
+        if (door && door.interact) {
+            door.interact.isInteractedWith = true;
+            return true;
+        }
+    }
+    return false;
 }
 
 

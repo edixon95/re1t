@@ -237,7 +237,14 @@ export const useInventoryStore = create((set, get) => ({
 
         // Wrong item
         if (door.requiredItem !== item) {
-            triggerUIText(door.interact.fail);
+            const specialText = door?.interact?.specialFail[item]
+            let text;
+            if (specialText) {
+                text = specialText.replace("{item}", item)
+            } else {
+                text = door.interact.fail.replace("{item}", item);
+            }
+            triggerUIText(text);
             return false;
         }
 
