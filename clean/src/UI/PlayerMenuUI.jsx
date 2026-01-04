@@ -10,8 +10,13 @@ const INVENTORY_COLUMNS = 4;
 const INVENTORY_ROWS = 3;
 const TOTAL_SLOTS = INVENTORY_COLUMNS * INVENTORY_ROWS;
 
+export const pendingDoorUseRef = {
+    current: null,
+};
+
 export const PlayerMenuUI = () => {
     const inventoryRef = useRef(null);
+
     const [contextStyle, setContextStyle] = useState({});
     const [open, setOpen] = useState(menuOpenRef.current); // false | "ingameMenu"
     const [focus, setFocus] = useState("menu");
@@ -23,6 +28,10 @@ export const PlayerMenuUI = () => {
     const [examineText, setExamineText] = useState(null);
 
     const [combineSourceIndex, setCombineSourceIndex] = useState(null);
+
+    // Mini interact prompt
+    const [interactPromptOpen, setInteractPromptOpen] = useState(false);
+    const [interactPromptIndex, setInteractPromptIndex] = useState(0); // 0 = Yes, 1 = Cancel
 
     const inventory = useInventoryStore((state) => state.inventory);
     const equippedItem = useInventoryStore((state) => state.equippedItem);
@@ -38,9 +47,9 @@ export const PlayerMenuUI = () => {
         return getValidCombineTargets(combineSourceItem);
     }, [combineSourceItem]);
 
-    // Menu definitions
     const MENU_OPTIONS = {
-        ingameMenu: ["Inventory", "Map", "Options"], // removed Save/Load
+        ingameMenu: ["Inventory", "Map", "Options"],
+        ingameMenuUseItem: ["Inventory"],
     };
 
     const menuOptions = useMemo(() => {
@@ -104,6 +113,23 @@ export const PlayerMenuUI = () => {
         }
     }, [open]);
 
+    // Force into inventory on interact
+    useEffect(() => {
+        if (open === "ingameMenuUseItem") {
+            setFocus("content");
+        }
+    }, [open]);
+
+    useEffect(() => {
+        const handler = () => {
+            setInteractPromptOpen(true)
+            menuOpenRef.current = "prompt"
+        };
+        window.addEventListener("trigger:interactPrompt", handler);
+        return () => window.removeEventListener("trigger:interactPrompt", handler);
+    }, []);
+
+
     // Context menu positioning
     useEffect(() => {
         if (!contextOpen) {
@@ -131,32 +157,112 @@ export const PlayerMenuUI = () => {
         });
     }, [contextOpen, inventoryIndex]);
 
+    const getContextOptions = (slot) => {
+        if (!slot) return [];
+
+        const baseOptions = ITEM_INTERACT_TABLE[slot.item]?.Options ?? [];
+        if (open === "ingameMenuUseItem") {
+            return [
+                {
+                    label: "Use",
+                    action: () => {
+                        useInventoryStore
+                            .getState()
+                            .tryUseInventoryItemDoor(
+                                slot.item,
+                                inventoryIndex,
+                                pendingDoorUseRef.current
+                            );
+
+                        pendingDoorUseRef.current = null;
+                        menuOpenRef.current = false;
+
+                    },
+                },
+                ...baseOptions.filter(o => o.label === "Examine"),
+            ];
+        }
+
+        return baseOptions;
+    };
 
     // Keyboard input
     useEffect(() => {
         const onKeyDown = (e) => {
-            if (!open) return;
             const key = e.key.toLowerCase();
 
-            if (key === "f" || key === "f") {
-                if (examineText) {
-                    setExamineText(null);
-                } else if (contextOpen) {
-                    setContextOpen(false);
-                } else if (focus === "content") {
-                    setFocus("menu");
-                } else {
-                    menuOpenRef.current = false;
-                    setOpen(false);
+            // ===== Mini interact prompt handling - MUST BE FIRST =====
+            if (interactPromptOpen) {
+                const options = ["Yes", "Cancel"];
+
+                // Navigate options
+                if (key === "w" || key === "a") {
+                    setInteractPromptIndex(i => (i === 0 ? options.length - 1 : i - 1));
                 }
+                if (key === "s" || key === "d") {
+                    setInteractPromptIndex(i => (i === options.length - 1 ? 0 : i + 1));
+                }
+
+                // Select option
+                if (key === " ") {
+                    const selected = options[interactPromptIndex];
+                    if (selected === "Yes") {
+                        menuOpenRef.current = "ingameMenuUseItem"
+                        setOpen("ingameMenuUseItem");
+                        setFocus("content");
+                    } else {
+                        menuOpenRef.current = false
+                    }
+                    setInteractPromptOpen(false);
+                    setInteractPromptIndex(0);
+                }
+
+                // Cancel
+                if (key === "f") {
+                    setInteractPromptOpen(false);
+                    setInteractPromptIndex(0);
+                    menuOpenRef.current = false
+                    pendingDoorUseRef.current = null;
+                }
+
+                return; // stop all other input while prompt is open
             }
 
+            // ===== Existing escape / F handling =====
+            if (!open) return;
 
+            if (key === "f") {
+                if (examineText) {
+                    setExamineText(null);
+                    return;
+                }
+
+                if (contextOpen) {
+                    setContextOpen(false);
+                    return;
+                }
+
+                if (open === "ingameMenuUseItem") {
+                    pendingDoorUseRef.current = null;
+                    menuOpenRef.current = false;
+                    setOpen(false);
+                    return;
+                }
+
+                if (focus === "content") {
+                    setFocus("menu");
+                    return;
+                }
+
+                menuOpenRef.current = false;
+                setOpen(false);
+            }
+
+            // ===== Menu navigation =====
             if (focus === "menu") {
                 if (key === "w") setMenuIndex(i => Math.max(0, i - 1));
                 if (key === "s") setMenuIndex(i => Math.min(menuOptions.length - 1, i + 1));
 
-                // Press Space to open menu item
                 if (key === " " && menuOptions[menuIndex]) {
                     const selected = menuOptions[menuIndex];
                     if (selected === "Inventory") setFocus("content");
@@ -164,14 +270,16 @@ export const PlayerMenuUI = () => {
                     else if (selected === "Options") console.log("Open Options");
                 }
 
-                // Press D to go into inventory if Inventory is highlighted
                 if (key === "d" && menuOptions[menuIndex] === "Inventory") {
                     setFocus("content");
                 }
             }
 
-
-            if (focus === "content" && open === "ingameMenu" && activeMenu === "Inventory") {
+            // ===== Inventory content navigation =====
+            if (
+                focus === "content" &&
+                (open === "ingameMenu" && activeMenu === "Inventory" || open === "ingameMenuUseItem")
+            ) {
                 const slot = fullInventory[inventoryIndex];
                 const col = inventoryIndex % INVENTORY_COLUMNS;
 
@@ -189,7 +297,6 @@ export const PlayerMenuUI = () => {
                     }
                 }
 
-
                 if (contextOpen) {
                     if (examineText) return;
                     if (!slot) {
@@ -197,7 +304,7 @@ export const PlayerMenuUI = () => {
                         return;
                     }
 
-                    const options = ITEM_INTERACT_TABLE[slot.item]?.Options ?? [];
+                    const options = getContextOptions(slot);
                     if (key === "w") setContextIndex(i => Math.max(0, i - 1));
                     if (key === "s") setContextIndex(i => Math.min(options.length - 1, i + 1));
 
@@ -207,11 +314,10 @@ export const PlayerMenuUI = () => {
                             openExamine: setExamineText,
                             equipUnequip: handleTryEquip,
                             consumeItem: () => useItemByIndex(inventoryIndex),
-                            beginCombine
+                            beginCombine,
                         });
                     }
 
-                    if (key === "f" || key === "f") setContextOpen(false);
                     return;
                 }
 
@@ -227,6 +333,8 @@ export const PlayerMenuUI = () => {
             }
         };
 
+
+
         window.addEventListener("keydown", onKeyDown);
         return () => window.removeEventListener("keydown", onKeyDown);
     }, [
@@ -239,52 +347,108 @@ export const PlayerMenuUI = () => {
         examineText,
         combineSourceIndex,
         validCombineTargets,
-        fullInventory
+        fullInventory,
+        interactPromptOpen,
+        interactPromptIndex
     ]);
 
-    if (open !== "ingameMenu") return null;
+    if (open !== "ingameMenu" && open !== "ingameMenuUseItem" && !interactPromptOpen) return null;
 
     return (
-        <div style={{ position: "absolute", inset: 0, background: "black", color: "white", display: "flex", justifyContent: "center", alignItems: "center" }}>
+        <div style={{ position: "absolute", inset: 0, background: !interactPromptOpen && "black", color: "white", display: "flex", justifyContent: "center", alignItems: "center" }}>
             {/* Left menu */}
-            <div style={{ width: "20%", height: "80%", background: "red", display: "flex", flexDirection: "column", justifyContent: "space-around", padding: 20 }}>
-                {menuOptions.map((op, i) => (
-                    <h1 key={op} style={{ color: focus === "menu" && i === menuIndex ? "yellow" : "white" }}>
-                        {op.toUpperCase()}
-                    </h1>
-                ))}
-            </div>
+            {open === "ingameMenu" &&
+                <div style={{ width: "20%", height: "80%", background: "red", display: "flex", flexDirection: "column", justifyContent: "space-around", padding: 20 }}>
+                    {menuOptions.map((op, i) => (
+                        <h1 key={op} style={{ color: focus === "menu" && i === menuIndex ? "yellow" : "white" }}>
+                            {op.toUpperCase()}
+                        </h1>
+                    ))}
+                </div>
+            }
 
             {/* Right content */}
-            <div style={{ position: "relative", width: "80%", height: "80%", background: "red" }}>
-                {open === "ingameMenu" && activeMenu === "Inventory" && (
-                    <>
-                        <InventoryWindow
-                            selectedIndex={inventoryIndex}
-                            focused={focus === "content"}
-                            inventory={fullInventory}
-                            equipped={equippedItem}
-                            combineSourceIndex={combineSourceIndex}
-                            validCombineTargets={validCombineTargets}
-                            containerRef={inventoryRef}
-                        />
+            <div style={{
+                position: "relative",
+                width: open === "ingameMenuUseItem" ? "100%" : "80%",
+                height: "80%", background: !interactPromptOpen && "red"
+            }}>
+                {(
+                    (open === "ingameMenu" && activeMenu === "Inventory") ||
+                    open === "ingameMenuUseItem"
+                ) && (
+                        <>
+                            <InventoryWindow
+                                selectedIndex={inventoryIndex}
+                                focused={focus === "content"}
+                                inventory={fullInventory}
+                                equipped={equippedItem}
+                                combineSourceIndex={combineSourceIndex}
+                                validCombineTargets={validCombineTargets}
+                                containerRef={inventoryRef}
+                            />
 
-                        {contextOpen && fullInventory[inventoryIndex] && (
-                            <div style={contextStyle}>
-                                {ITEM_INTERACT_TABLE[fullInventory[inventoryIndex].item].Options.map((op, i) => (
-                                    <div key={op.label} style={{ color: i === contextIndex ? "yellow" : "white", padding: "4px 8px" }}>
-                                        {equippedItem.equipped === fullInventory[inventoryIndex].item && op.label === "Equip" ? "Unequip" : op.label}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </>
-                )}
+                            {contextOpen && fullInventory[inventoryIndex] && (
+                                <div style={contextStyle}>
+                                    {getContextOptions(fullInventory[inventoryIndex]).map((op, i) => (
+                                        <div
+                                            key={op.label}
+                                            style={{
+                                                color: i === contextIndex ? "yellow" : "white",
+                                                padding: "4px 8px",
+                                            }}
+                                        >
+                                            {equippedItem.equipped === fullInventory[inventoryIndex].item &&
+                                                op.label === "Equip"
+                                                ? "Unequip"
+                                                : op.label}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                        </>
+                    )}
 
                 {examineText && (
                     <div style={{ position: "absolute", inset: "20%", background: "black", border: "2px solid white", padding: 20, fontSize: "20px" }}>
                         {examineText}
                         <div style={{ marginTop: 20, color: "gray" }}>Press CTRL to close</div>
+                    </div>
+                )}
+
+                {interactPromptOpen && (
+                    <div
+                        style={{
+                            position: "absolute",
+                            top: "40%",
+                            left: "50%",
+                            transform: "translate(-50%, -50%)",
+                            background: "black",
+                            border: "2px solid white",
+                            padding: "20px 40px",
+                            zIndex: 2000,
+                            textAlign: "center",
+                        }}
+                    >
+                        <div style={{ marginBottom: 20, fontSize: 24 }}>
+                            Do you want to interact with this thing?
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "center", gap: 20 }}>
+                            {["Yes", "Cancel"].map((opt, i) => (
+                                <div
+                                    key={opt}
+                                    style={{
+                                        color: i === interactPromptIndex ? "yellow" : "white",
+                                        fontSize: 20,
+                                        padding: "4px 12px",
+                                        border: i === interactPromptIndex ? "1px solid yellow" : "1px solid white",
+                                    }}
+                                >
+                                    {opt}
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 )}
 

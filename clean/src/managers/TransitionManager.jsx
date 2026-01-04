@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { DOOR_TABLE } from "../data/doorTable";
 import { useInventoryStore } from "../stores/useInventoryStore";
-import { isTransition } from "../Player/Player";
+import { isTransition, menuOpenRef } from "../Player/Player";
 import { useEnemyStore } from "../stores/useEnemyStores";
 import { liveEnemyRefs } from "./EnemyManger";
+import { pendingDoorUseRef } from "../UI/PlayerMenuUI";
 
 export const TransitionManager = (playerRef, setGameState, isTransitionRef, handleUpdatePlayerRef) => {
     if (!playerRef || !setGameState) return;
@@ -16,17 +17,24 @@ export const TransitionManager = (playerRef, setGameState, isTransitionRef, hand
 
         if (!targetLevel || !targetDoorId) return;
 
+        // if (fromDoor.requiredItem && !fromDoor.isUnlocked) {
+        //     const used = useInventoryStore.getState().tryUseInventoryItemDoor(
+        //         fromDoor.requiredItem,
+        //         fromDoor.isKeySingle,
+        //         fromDoor.id
+        //     );
+
+
+        //     if (!used)
+        //         return;
+        // }
+
         if (fromDoor.requiredItem && !fromDoor.isUnlocked) {
-            const used = useInventoryStore.getState().tryUseInventoryItemDoor(
-                fromDoor.requiredItem,
-                fromDoor.isKeySingle,
-                fromDoor.id
-            );
-
-
-            if (!used)
-                return;
+            pendingDoorUseRef.current = fromDoor.id;
+            window.dispatchEvent(new CustomEvent("trigger:interactPrompt"));
+            return;
         }
+
 
         if (isTransitionRef) isTransitionRef.current = true;
 

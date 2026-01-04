@@ -230,35 +230,36 @@ export const useInventoryStore = create((set, get) => ({
         return true;
     },
 
-    tryUseInventoryItemDoor: (requestedItem, isSingleUse, usedOnDoorId) => {
-        const { inventory } = get()
-        const idx = inventory.findIndex(x => x?.item === requestedItem)
-        const door = getDoor(usedOnDoorId)
-        if (!door) return;
-        if (idx === -1) {
-            const uiText = door.interact.fail
-            triggerUIText(uiText)
-            return false
+    tryUseInventoryItemDoor: (item, inventoryIndex, usedOnDoorId) => {
+        const { inventory } = get();
+        const door = getDoor(usedOnDoorId);
+        if (!door) return false;
+
+        // Wrong item
+        if (door.requiredItem !== item) {
+            triggerUIText(door.interact.fail);
+            return false;
         }
 
-        for (const levelKey in DOOR_TABLE) {
-            const doors = DOOR_TABLE[levelKey]
-            const doorIdx = doors.findIndex(d => d.id === usedOnDoorId)
-            if (doorIdx !== -1) {
-                if (isSingleUse) {
-                    const newInventory = [...inventory]
-                    newInventory[idx] = null
-                    set({ inventory: newInventory })
-                }
+        // Consume item if single-use
+        if (door.isKeySingle) {
+            const newInventory = [...inventory];
+            newInventory[inventoryIndex] = null;
+            set({ inventory: newInventory });
+        }
 
-                DOOR_TABLE[levelKey][doorIdx].isUnlocked = true
-                const uiText = door.interact.success
-                triggerUIText(uiText)
-                return true
+        // Unlock door (persistent)
+        for (const levelKey in DOOR_TABLE) {
+            const doors = DOOR_TABLE[levelKey];
+            const doorIdx = doors.findIndex(d => d.id === usedOnDoorId);
+            if (doorIdx !== -1) {
+                DOOR_TABLE[levelKey][doorIdx].isUnlocked = true;
+                break;
             }
         }
 
-        return false
+        triggerUIText(door.interact.success);
+        return true;
     },
 
     tryGetWeaponInformation: (equipped) => {
