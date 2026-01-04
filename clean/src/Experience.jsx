@@ -7,6 +7,7 @@ import { EnemyManager } from "./managers/EnemyManger";
 import { DebugSoundSpheres } from "./Player/SoundSphere";
 import { isDevCam } from "./App";
 import { DevCam } from "./tool/DevCam";
+import { CutsceneManager } from "./managers/CutsceneManager";
 
 export const Experience = ({ playerRef, gameState, setGameState }) => {
     const [region, setRegion] = useState(null);
@@ -20,28 +21,42 @@ export const Experience = ({ playerRef, gameState, setGameState }) => {
         return cleanup;
     }, []);
 
-
     return (
         <>
             {/*World */}
             <WorldManager gameState={gameState} />
 
             {/* Player */}
-            <Player playerRef={playerRef} level={gameState.level} />
-            <DebugSoundSpheres />
-            <EnemyManager gameState={gameState} player={playerRef} />
+            {gameState.mode === "game" &&
+                <>
+                    <Player playerRef={playerRef} level={gameState.level} />
+                    <DebugSoundSpheres />
+                    <EnemyManager gameState={gameState} player={playerRef} />
+                </>
+            }
 
             {/* Camera system */}
-            {!isDevCam ?
-                <CameraManager
-                    region={region}
-                    setRegion={setRegion}
+            {gameState.mode === "game" && (
+                !isDevCam ? (
+                    <CameraManager
+                        region={region}
+                        setRegion={setRegion}
+                        gameState={gameState}
+                        playerRef={playerRef}
+                    />
+                ) : (
+                    <DevCam />
+                )
+            )}
+
+
+            {gameState.mode === "cutscene" && (
+                <CutsceneManager
                     gameState={gameState}
-                    playerRef={playerRef}
+                    setGameState={setGameState}
                 />
-                :
-                <DevCam />
-            }
+            )}
+
         </>
     );
 }

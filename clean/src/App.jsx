@@ -13,9 +13,19 @@ export const isVisible = false
 
 export const App = () => {
   const playerRef = useRef()
-  const [gameState, setGameState] = useState({
+  const testFromLevel = {
     level: "intro",
-  });
+    mode: "game", // game/cutscene
+    cutsceneId: null
+  }
+
+  const testFromCutscene = {
+    level: "test_cutscene",
+    mode: "cutscene",
+    cutsceneId: "test_cutscene",
+  }
+
+  const [gameState, setGameState] = useState(testFromCutscene);
   const [pauseGame, setPauseGame] = useState(false)
   useEffect(() => {
     const interval = setInterval(() => {
