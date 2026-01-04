@@ -6,6 +6,7 @@ export const CUTSCENE_TABLE = {
     test_cutscene: {
         Component: TestIntroCutscene,
         World: TestIntroCutsceneWorld,
-        returnLevel: "intro",
+        endSceneDoor: "A_HALLWAY_EXIT_STAIR",
+        skipTransition: false
     },
 }

@@ -1,5 +1,6 @@
 // managers/CutsceneManager.jsx
 import { CUTSCENE_TABLE } from "../data/cutsceneTable"
+import { getDoor } from "../data/doorTable"
 
 export const CutsceneManager = ({ gameState, setGameState }) => {
   const cutscene = CUTSCENE_TABLE[gameState.cutsceneId]
@@ -10,12 +11,20 @@ export const CutsceneManager = ({ gameState, setGameState }) => {
   return (
     <CutsceneComponent
       onEnd={() => {
-        setGameState(prev => ({
+        setGameState((prev) => ({
           ...prev,
-          level: cutscene.returnLevel,
           mode: "game",
-          cutsceneId: null,
+          cutsceneId: null
         }))
+
+        const door = getDoor(cutscene.endSceneDoor)
+        if (!cutscene.skipTransition) {
+          window.dispatchEvent(
+            new CustomEvent("door:enter", {
+              detail: door,
+            })
+          );
+        }
       }}
     />
   )
