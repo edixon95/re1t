@@ -22,15 +22,6 @@
         - Add storage to save/load. This probably goes into inventory, it's just a second inventory
     - Update PlayerMenuUI to replace the left side headings with storage
         - Context menu and inventory should work together
-    - Multi floor spawning
-        - Sometimes able to see a lower floor/interact with an enemy
-    - Expand unlock criteria for doors
-        - Currently these take 0 or 1 items
-        - Should take 0-N items and accept different trigger types
-    - Buttons:
-        - Trigger things, mostly doors to unlock or lock 
-    - Puzzle types:
-        ?
     
     - Menu:
         - Map to become "Notes"
@@ -48,3 +39,29 @@
         - Stair cutouts howto:
             Stairs going up, just add new floor, current wall building will work for it
             Stairs going down, skip: true, add a direction
+    
+    - Puzzles
+        - First type added; item platforms
+            - howto: create "other" in levelTable and join to puzzleTable
+    - Buttons
+        - First type added; single click
+            - howto: create "other" in levelTable and give target: doorId
+    - Door unlock criteria:
+        - It's just arrays now
+
+    - Cutscenes
+        - howto: 
+        if (door?.cutsceneId && !door.isSceneViewed && door.activeScene) {
+            // set door to viewed
+            setGameState((prev) => ({
+                ...prev,
+                mode: "cutscene",
+                cutsceneId: door?.cutsceneId
+            }))
+            hasViewedScene(door.id)
+            return;
+        }
+
+        Doors hold the cutscene ids, link them to cutsceneTable. geometry and scene instructions stored in levels -> cutscenes
+        Skip transition means it won't use the endSceneDoor, which is used to designate where the player will spawn after the cutscene ends
+        This means that skipTransition: true will just let the player continue with whatever they were doing after the cutscene ends 
