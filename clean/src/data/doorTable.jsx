@@ -28,7 +28,8 @@ const intro = [
             level: "introTwo",
             doorId: "B_HALLWAY_ENTRY",
         },
-        requiredItem: "KeyCard",
+        requiredItems: ["KeyCard", "Herb"],
+        requiredInserted: [],
         isKeySingle: true,
         spawn: {
             position: [-2, 0.5, 7.25],
@@ -36,10 +37,13 @@ const intro = [
         },
         interact: {
             isInteractedWith: false,
-            initial: "It doesn't open. There's a card reader attached to the front.",
+            initial: "It doesn't open. There are two card readers attached to the front.",
             after: "Try to put something in the reader?",
             fail: "You press the {item} into the reader, nothing happened",
-            success: "You used the KeyCard and the door beeped",
+            success: "You used the {item} and the door beeped",
+            partialSuccess: [
+                "You insert {item} into one of the readers, something happened but the door is still locked"
+            ],
             specialFail: {
                 Herb: "You press the herbs into the reader, the room smells slightly fresher. The door is still locked.",
                 HerbHerb: "You press the herbs into the reader, the room smells extra fresh and the door remains locked",
@@ -62,7 +66,8 @@ const introTwo = [
             level: "intro",
             doorId: "A_HALLWAY_EXIT",
         },
-        requiredItem: "Blue KeyCard",
+        requiredItems: ["Blue KeyCard", "Colt Ammo"],
+        requiredInserted: [],
         isKeySingle: false,
         spawn: {
             position: [5, 0.5, -7.25],
@@ -73,7 +78,11 @@ const introTwo = [
             initial: "It doesn't open. There's a card reader attached to the front, this time it's blue.",
             after: "Try to put something in the blue reader?",
             fail: "You press the {item} into the reader, nothing happened",
-            success: "You used the Blue KeyCard and the door beeped",
+            success: "You used the {item} and the door beeped",
+            partialSuccess: [
+                "You insert {item} into one of the blue readers, something happened but the door is still locked"
+            ],
+            partialFail: "You don't need to use {item} again, it's something else",
             specialFail: {
                 Herb: "You press the herbs into the reader, the room smells slightly fresher. The door is still locked.",
                 HerbHerb: "You press the herbs into the reader, the room smells extra fresh and the door remains locked",
@@ -119,8 +128,14 @@ export const getDoorsForSave = () => {
     for (const [levelName, doors] of Object.entries(DOOR_TABLE)) {
         result[levelName] = doors.map(door => ({
             id: door.id,
-            isUnlocked: door.isUnlocked ?? false
+            isUnlocked: door.isUnlocked ?? false,
+            requiredInserted: door.requiredInserted || [],
+            isSceneViewed: door.isSceneViewed ?? false,
+            ...(door?.interact
+                ? { isInteractedWith: door.interact.isInteractedWith }
+                : {})
         }));
+
     }
 
     return result;
@@ -137,6 +152,12 @@ export const applyDoorsFromSave = (savedDoors) => {
             const door = levelDoors.find(d => d.id === savedDoor.id);
             if (door) {
                 door.isUnlocked = !!savedDoor.isUnlocked;
+                door.requiredInserted = savedDoor.requiredInserted || [];
+                door.isSceneViewed = !!savedDoor.isSceneViewed;
+                if (door?.interact && 'isInteractedWith' in savedDoor) {
+                    door.interact.isInteractedWith = savedDoor.isInteractedWith;
+                }
+
             }
         }
     }

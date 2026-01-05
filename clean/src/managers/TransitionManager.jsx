@@ -26,7 +26,7 @@ export const TransitionManager = (playerRef, setGameState, isTransitionRef, hand
             return;
         }
 
-        if (door.requiredItem && !door.isUnlocked) {
+        if (door.requiredItems?.length > 0 && !door.isUnlocked) {
             pendingDoorUseRef.current = door.id;
             window.dispatchEvent(
                 new CustomEvent("trigger:interactPrompt", { detail: "door" }));
