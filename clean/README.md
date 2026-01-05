@@ -1,15 +1,4 @@
 ## This will be my todo list to keep it out of the code
-- Define puzzle types
-    - Add test puzzle
-
-- Map
-    - Map population for screen by level not by region
-        - All "Intro" levels should look like one map
-        - Probably will require some building
-
-- Load/Save now added
-    - Add currency for saving
-    - Start tracking player time, level etc for proper save names, its a bit confusing
 
 - Start adding fail sounds
     - menu spam
@@ -65,3 +54,9 @@
         Doors hold the cutscene ids, link them to cutsceneTable. geometry and scene instructions stored in levels -> cutscenes
         Skip transition means it won't use the endSceneDoor, which is used to designate where the player will spawn after the cutscene ends
         This means that skipTransition: true will just let the player continue with whatever they were doing after the cutscene ends 
+
+        Puzzles can also trigger cutscenes via doors using the reward object.
+        activatesCutSceneAwait will prime a specific cutscene to play when the door it belongs to is used
+        activatesCutSceneImmediate will play the cutscene instantly
+    
+        
