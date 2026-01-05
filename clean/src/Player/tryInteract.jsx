@@ -5,6 +5,8 @@ import { useItemStore } from "../stores/useItemStore";
 import { useInventoryStore } from "../stores/useInventoryStore";
 import { menuOpenRef } from "./Player";
 import { otherMeshes } from "../managers/OtherInteractManager";
+import { handleUnlockDoor } from "../data/doorTable";
+import { getButton, handlMarkButtonUsed } from "../data/levelTabel";
 
 const interactionRaycaster = new THREE.Raycaster();
 const interactionDirection = new THREE.Vector3();
@@ -122,6 +124,15 @@ export const tryInteract = (player, level, canOpenMenu) => {
                 detail: puzzle,
             })
         );
+    } else if (hitItem.userData.type === "buttonStation") {
+        const current = getButton(hitItem.userData.button.level, hitItem.userData.button.target);
+        if (current.isUsed) {
+            triggerUIText("You don't need to use this again")
+            return
+        }
+        handlMarkButtonUsed(current.level, current.target);
+        handleUnlockDoor(current.target)
+        triggerUIText("You hear a click")
     };
 
 };

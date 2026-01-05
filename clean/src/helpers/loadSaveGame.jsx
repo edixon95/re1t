@@ -1,4 +1,6 @@
 import { getDoorsForSave, applyDoorsFromSave } from "../data/doorTable"
+import { applyButtonsFromSave, getButtonsForSave } from "../data/levelTabel";
+import { applyPuzzlesFromSave, getPuzzlesForSave } from "../data/puzzleTable";
 import { useEnemyStore } from "../stores/useEnemyStores"
 import { useInventoryStore } from "../stores/useInventoryStore"
 import { useItemStore } from "../stores/useItemStore"
@@ -11,6 +13,8 @@ export const loadPlayerGame = (slot, setGameState) => {
     const saveData = JSON.parse(raw);
 
     applyDoorsFromSave(saveData.doors);
+    applyButtonsFromSave(saveData.buttons);
+    applyPuzzlesFromSave(saveData.puzzles);
     useItemStore.getState().loadItemsFromSave(saveData.items);
     useEnemyStore.getState().loadEnemiesFromSave(saveData.enemies);
     useInventoryStore.getState().loadInventoryFromSave(saveData.inventory);
@@ -35,6 +39,8 @@ export const savePlayerGame = (slot, playerRef) => {
     const doors = getDoorsForSave();
     const items = getItemsForSave();
     const enemies = getEnemiesForSave();
+    const buttons = getButtonsForSave();
+    const puzzles = getPuzzlesForSave();
 
     const playerPosition = playerRef
         ? [playerRef.position.x, playerRef.position.y, playerRef.position.z]
@@ -51,7 +57,9 @@ export const savePlayerGame = (slot, playerRef) => {
         inventory: useInventoryStore.getState().getInventoryForSave(),
         doors,
         items,
-        enemies
+        enemies,
+        buttons,
+        puzzles
     };
     localStorage.setItem(`save_${slot}`, JSON.stringify(saveData));
 };

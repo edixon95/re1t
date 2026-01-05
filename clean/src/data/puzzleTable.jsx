@@ -100,3 +100,20 @@ export const isPuzzleComplete = (id) => {
 
     return !isComplete ? false : PUZZLE_TABLE[id].reward;
 };
+
+export const getPuzzlesForSave = () => {
+    return Object.entries(PUZZLE_TABLE).map(([id, puzzle]) => ({
+        id,
+        parts: puzzle.parts,
+        isComplete: puzzle.isComplete
+    }));
+};
+
+export const applyPuzzlesFromSave = (savedPuzzles = []) => {
+    savedPuzzles.forEach(({ id, parts, isComplete }) => {
+        const puzzle = PUZZLE_TABLE[id];
+        if (!puzzle) return;
+        puzzle.parts = parts;
+        puzzle.isComplete = isComplete
+    });
+};

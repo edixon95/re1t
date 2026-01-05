@@ -6,10 +6,12 @@ import { DoorManager } from "../../managers/DoorManager"
 import { DOOR_TABLE } from "../../data/doorTable"
 import { useItemStore } from "../../stores/useItemStore"
 import { LEVEL_TABLE } from "../../data/levelTabel"
+import { OtherInteractManager } from "../../managers/OtherInteractManager"
 
 export const WorldIntroTwo = () => {
     const floors = LEVEL_TABLE["introTwo"].world
     const props = LEVEL_TABLE["introTwo"].props
+    const others = LEVEL_TABLE["introTwo"].others
 
     const floorRefs = floors.map(() => useRef())
     const introTwoItems = useItemStore((state) => state.itemTable.introTwo)
@@ -53,6 +55,9 @@ export const WorldIntroTwo = () => {
             <PropManager props={props} />
             <ItemManager items={introTwoItems} />
             <DoorManager doors={DOOR_TABLE["introTwo"]} />
+
+            {/* Manual per level */}
+            <OtherInteractManager otherItems={others} />
         </>
     )
 }
