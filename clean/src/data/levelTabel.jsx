@@ -11,7 +11,8 @@ const introTwo = {
 
 const introOneUpper = {
     world: [{ position: [-3, 0, 3], size: [4, 10], color: "#999" }, { position: [0, 0, 4], size: [4, 2.2], color: "#999", skip: true, direction: 3 }],
-    props: [{ position: [1.5, 0.5, -1.15], size: [1, 1.2, 1.5] }]
+    props: [{ position: [1.5, 0.5, -1.15], size: [1, 1.2, 1.5] }],
+    others: [{ position: [-3, 0.5, 1.5], rotation: 1, type: "puzzleStation", puzzleId: "test_puzzle", part: "pole_1" }, { position: [-3, 0.5, 4], rotation: 1, type: "puzzleStation", puzzleId: "test_puzzle", part: "pole_2" }]
 }
 
 export const LEVEL_TABLE = {

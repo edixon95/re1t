@@ -4,18 +4,19 @@ import { isTransition } from "../Player/Player";
 import { useEnemyStore } from "../stores/useEnemyStores";
 import { liveEnemyRefs } from "./EnemyManger";
 import { pendingDoorUseRef } from "../UI/PlayerMenuUI";
+import { getPuzzleById } from "../data/puzzleTable";
+import { triggerUIText } from "../UI/InformationalUI";
 
 export const TransitionManager = (playerRef, setGameState, isTransitionRef, handleUpdatePlayerRef) => {
     if (!playerRef || !setGameState) return;
 
-
-    const handleDoorEnter = (e) => {
+    const handleDoorInteraction = (e) => {
         const fromDoor = e.detail;
         const door = getDoor(fromDoor.id)
         if (!door) return;
 
         // Door has a cutscene
-        if (door?.cutsceneId && !door.isSceneViewed) {
+        if (door?.cutsceneId && !door.isSceneViewed && door.activeScene) {
             // set door to viewed
             setGameState((prev) => ({
                 ...prev,
@@ -26,7 +27,7 @@ export const TransitionManager = (playerRef, setGameState, isTransitionRef, hand
             return;
         }
 
-        if (door.requiredItems?.length > 0 && !door.isUnlocked) {
+        if (door.requiredItems?.length > 0 && !door.isUnlocked && !door.isPuzzle) {
             pendingDoorUseRef.current = door.id;
             window.dispatchEvent(
                 new CustomEvent("trigger:interactPrompt", { detail: "door" }));
@@ -79,6 +80,27 @@ export const TransitionManager = (playerRef, setGameState, isTransitionRef, hand
                 setGameState((prev) => ({ ...prev, fade: false }));
             });
         }, 700);
+    }
+
+    const handlePuzzleInteraction = (e) => {
+        pendingDoorUseRef.current = e.detail;
+
+        const puzzle = getPuzzleById(e.detail.id)
+        if (puzzle.isComplete) {
+            triggerUIText("I have no reason to interact with this anymore")
+            return
+        }
+
+        window.dispatchEvent(
+            new CustomEvent("trigger:interactPrompt", { detail: "puzzle" }));
+    }
+
+    const handleDoorEnter = (e) => {
+        if (!e.detail?.isPuzzle) {
+            handleDoorInteraction(e)
+        } else if (e.detail.isPuzzle) {
+            handlePuzzleInteraction(e)
+        }
     };
 
     window.addEventListener("door:enter", handleDoorEnter);

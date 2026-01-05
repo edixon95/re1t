@@ -3,6 +3,7 @@ import { wallMeshes } from "../managers/WallManager";
 import { propMeshes } from "../managers/PropManager";
 import { liveEnemyRefs } from "../managers/EnemyManger";
 import { doorMeshes } from "../managers/DoorManager";
+import { otherMeshes } from "../managers/OtherInteractManager";
 
 
 export const canMove = (playerPos, playerRot, forwardVec, distance = 0.5, buffer = 0.5) => {
@@ -14,6 +15,7 @@ export const canMove = (playerPos, playerRot, forwardVec, distance = 0.5, buffer
         ...wallMeshes.map(r => r.current).filter(Boolean),
         ...propMeshes.map(r => r.current).filter(Boolean),
         ...doorMeshes.map(r => r.current).filter(Boolean),
+        ...otherMeshes.map(r => r.current).filter(Boolean),
         ...liveEnemyRefs.filter(Boolean),
     ];
     const hits = raycaster.intersectObjects(meshes, false);

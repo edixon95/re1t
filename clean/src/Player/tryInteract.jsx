@@ -111,6 +111,17 @@ export const tryInteract = (player, level, canOpenMenu) => {
         } else {
             console.log("too soon")
         }
+    } else if (hitItem.userData.type === "puzzleStation") {
+        const puzzle = {
+            isPuzzle: true,
+            id: hitItem.userData.puzzle.puzzleId,
+            part: hitItem.userData.puzzle.part
+        }
+        window.dispatchEvent(
+            new CustomEvent("door:enter", {
+                detail: puzzle,
+            })
+        );
     };
 
 };

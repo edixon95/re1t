@@ -24,7 +24,7 @@ export const App = () => {
     cutsceneId: "test_cutscene",
   }
 
-  const [gameState, setGameState] = useState(testFromCutscene);
+  const [gameState, setGameState] = useState(testFromLevel);
   const [pauseGame, setPauseGame] = useState(false)
   useEffect(() => {
     const interval = setInterval(() => {
@@ -39,7 +39,7 @@ export const App = () => {
       <Canvas
         camera={{ fov: 75 }}
         shadows
-        frameloop={pauseGame ? "demand" : "always"}
+        frameloop={isDevCam ? "always" : pauseGame ? "demand" : "always"}
       >
         <Experience playerRef={playerRef} gameState={gameState} setGameState={setGameState} />
       </Canvas>
