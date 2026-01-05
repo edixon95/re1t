@@ -362,7 +362,6 @@ export const useInventoryStore = create((set, get) => ({
                 // Trigger cutscene directy after completion
             }
         }
-        set({ equippedItem: { ...get().equippedItem, cAmmo: ammoTotal } });
     },
 
     tryRecoverFromPuzzle: (puzzle) => {
