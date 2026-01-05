@@ -6,6 +6,7 @@ import { InventoryWindow } from "./InventoryUI";
 import { ITEM_INTERACT_TABLE } from "../data/itemInteractTable";
 import { resolveCombine, getValidCombineTargets } from "../helpers/getValidCombineTargets";
 import { getDoor, hasInteractedWithDoor } from "../data/doorTable";
+import { getPuzzleById, withdrawPieceFromPuzzle } from "../data/puzzleTable";
 
 const INVENTORY_COLUMNS = 4;
 const INVENTORY_ROWS = 3;
@@ -136,13 +137,19 @@ export const PlayerMenuUI = () => {
         return true
     }
 
+    const handleInteractPuzzleText = () => {
+        const puzzle = getPuzzleById(pendingDoorUseRef.current.id);
+        const text = puzzle.interact[pendingDoorUseRef.current.part]
+        pendingDoorUseRef.current.showTakeOption = puzzle.parts[[pendingDoorUseRef.current.part]] !== null
+        setPromptText(text)
+    }
+
     useEffect(() => {
         const handler = (event) => {
             if (event.detail === "door") {
                 handleInteractTextDoor(pendingDoorUseRef.current)
-            } else {
-                // todo, triggers for puzzles
-                console.log("something else")
+            } else if (event.detail === "puzzle") {
+                handleInteractPuzzleText()
             }
             setInteractPromptOpen(true)
             menuOpenRef.current = "prompt"
@@ -189,13 +196,22 @@ export const PlayerMenuUI = () => {
                 {
                     label: "Use",
                     action: () => {
-                        useInventoryStore
-                            .getState()
-                            .tryUseInventoryItemDoor(
-                                slot.item,
-                                inventoryIndex,
-                                pendingDoorUseRef.current
-                            );
+                        if (!pendingDoorUseRef.current?.isPuzzle) {
+                            useInventoryStore
+                                .getState()
+                                .tryUseInventoryItemDoor(
+                                    slot.item,
+                                    inventoryIndex,
+                                    pendingDoorUseRef.current
+                                );
+                        } else if (pendingDoorUseRef.current?.isPuzzle) {
+                            useInventoryStore
+                                .getState()
+                                .tryUseInventoryItemPuzzle(
+                                    inventoryIndex,
+                                    pendingDoorUseRef.current
+                                );
+                        }
 
                         pendingDoorUseRef.current = null;
                         menuOpenRef.current = false;
@@ -208,20 +224,21 @@ export const PlayerMenuUI = () => {
 
         return baseOptions;
     };
-    const resetAllMenuRef = () => {
-        menuOpenRef.current = null
-        pendingDoorUseRef.current = null;
-        setPromptText("")
-    }
 
     // Keyboard input
     useEffect(() => {
         const onKeyDown = (e) => {
             const key = e.key.toLowerCase();
 
+            let shouldShowTake = false
+            if (pendingDoorUseRef.current?.id) {
+                const puzzle = getPuzzleById(pendingDoorUseRef.current?.id)
+                shouldShowTake = puzzle.parts[pendingDoorUseRef.current?.part] !== null
+            }
+
             // ===== Mini interact prompt handling - MUST BE FIRST =====
             if (interactPromptOpen) {
-                const options = ["Yes", "Cancel"];
+                const options = ["Yes", ...(shouldShowTake ? ["Take"] : []), "Cancel"];
 
                 // Navigate options
                 if (key === "w" || key === "a") {
@@ -238,6 +255,15 @@ export const PlayerMenuUI = () => {
                         menuOpenRef.current = "ingameMenuUseItem"
                         setOpen("ingameMenuUseItem");
                         setFocus("content");
+                    } else if (selected === "Take") {
+                        useInventoryStore
+                            .getState()
+                            .tryRecoverFromPuzzle(
+                                pendingDoorUseRef.current
+                            );
+
+                        pendingDoorUseRef.current = null;
+                        menuOpenRef.current = false;
                     } else {
                         menuOpenRef.current = false
                     }
@@ -250,7 +276,8 @@ export const PlayerMenuUI = () => {
                 if (key === "f") {
                     setInteractPromptOpen(false);
                     setInteractPromptIndex(0);
-                    resetAllMenuRef()
+                    pendingDoorUseRef.current = null;
+                    menuOpenRef.current = false;
                 }
 
                 return; // stop all other input while prompt is open
@@ -468,7 +495,7 @@ export const PlayerMenuUI = () => {
                             }
                         </div>
                         <div style={{ display: "flex", justifyContent: "center", gap: 20 }}>
-                            {["Yes", "Cancel"].map((opt, i) => (
+                            {["Yes", ...(pendingDoorUseRef.current.showTakeOption ? ["Take"] : []), "Cancel"].map((opt, i) => (
                                 <div
                                     key={opt}
                                     style={{

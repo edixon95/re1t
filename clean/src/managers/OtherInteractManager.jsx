@@ -1,9 +1,11 @@
 import { useRef } from "react";
 import { SaveStation } from "../levelParts/SaveStation";
+import { PuzzleStation } from "../levelParts/PuzzleStation";
 
 export const otherMeshes = [];
 const typeComponents = {
     saveStation: SaveStation,
+    puzzleStation: PuzzleStation
 };
 
 export const OtherInteractManager = ({ otherItems }) => {
@@ -25,6 +27,7 @@ export const OtherInteractManager = ({ otherItems }) => {
                             position={item.position}
                             rotation={item.rotation}
                             ref={ref}
+                            item={item}
                         />
                     );
                 }

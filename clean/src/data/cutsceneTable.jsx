@@ -9,7 +9,7 @@ export const CUTSCENE_TABLE = {
         Component: TestIntroCutscene,
         World: TestIntroCutsceneWorld,
         endSceneDoor: "A_HALLWAY_EXIT_STAIR",
-        skipTransition: false
+        skipTransition: false,
     },
     test_cutscene_two: {
         Component: TestIntroCutsceneTwo,

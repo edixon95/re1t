@@ -1,5 +1,5 @@
 import { create } from "zustand"
-import { DOOR_TABLE, getDoor } from "../data/doorTable"
+import { DOOR_TABLE, getDoor, handleUnlockDoor, setSceneAsActiveViaCutscene } from "../data/doorTable"
 import { triggerUIText } from "../UI/InformationalUI"
 import { AMMO_TABLE } from "../data/ammoTable"
 import { WEAPON_TABLE } from "../data/weaponTable"
@@ -7,6 +7,8 @@ import { useItemStore } from "./useItemStore"
 import { CONSUME_TABLE } from "../data/consumeTable"
 import { stingometer } from "../helpers/stingometer"
 import { menuOpenRef } from "../Player/Player"
+import { addPieceToPuzzle, getPuzzleById, isPuzzleComplete, replacePieceFromPuzzle, withdrawPieceFromPuzzle } from "../data/puzzleTable"
+import { replaceText, replaceTextPuzzle } from "../helpers/replaceText"
 
 export const useInventoryStore = create((set, get) => ({
     inventory: Array(12).fill(null),
@@ -232,17 +234,12 @@ export const useInventoryStore = create((set, get) => ({
 
     tryUseInventoryItemDoor: (item, inventoryIndex, usedOnDoorId) => {
         const { inventory } = get();
-        const door = getDoor(usedOnDoorId);
         if (!door) return false;
 
         const isKey = (requiredArr, check) => {
             return requiredArr.includes(check)
         }
 
-        const replaceText = (text, replace) => {
-            console.log(text, replace)
-            return text.replace("{item}", replace)
-        }
         // Wrong item
         if (!isKey(door.requiredItems, item)) {
             const specialText = door?.interact?.specialFail[item]
@@ -314,6 +311,78 @@ export const useInventoryStore = create((set, get) => ({
         }
 
         return !requireMoreKeys
+    },
+
+    tryUseInventoryItemPuzzle: (inventoryIndex, puzzle) => {
+        const { inventory } = get();
+        const interactedPuzzle = getPuzzleById(puzzle.id)
+        const puzzlePart = interactedPuzzle.parts[puzzle.part]
+        // Can the puzzle return items if incomplete
+        if (!interactedPuzzle.canWithdrawItems && puzzlePart !== null) {
+            // Text here about it not being able to move
+            return false;
+        }
+
+        const newInventory = [...inventory];
+        if (puzzlePart !== null) {
+            const returnedItem = replacePieceFromPuzzle(puzzle.id, puzzle.part, newInventory[inventoryIndex])
+            const text = replaceTextPuzzle(interactedPuzzle.placed[puzzle.part].replace, puzzlePart.item, newInventory[inventoryIndex].item)
+            newInventory[inventoryIndex] = returnedItem;
+            set({ inventory: newInventory });
+            triggerUIText(text)
+
+        } else {
+            const text = replaceText(interactedPuzzle.placed[puzzle.part].empty, newInventory[inventoryIndex].item)
+            addPieceToPuzzle(puzzle.id, puzzle.part, newInventory[inventoryIndex])
+            newInventory[inventoryIndex] = null;
+            set({ inventory: newInventory });
+            triggerUIText(text)
+        }
+
+        const reward = isPuzzleComplete(puzzle.id)
+        if (reward) {
+            if (reward.type === "UNLOCK") {
+                handleUnlockDoor(reward.target)
+                if (!reward?.activatesCutSceneImmediate) { // No point showing text if just going to play a cutscene instantly
+                    triggerUIText(interactedPuzzle.interact.success)
+                }
+            }
+
+            // Prime a cutscene to happen on the door
+            if (reward?.activatesCutSceneAwait) {
+                setSceneAsActiveViaCutscene(reward.activatesCutSceneAwait)
+            } else if (reward?.activatesCutSceneImmediate) {
+                // Trigger cutscene directy after completion
+            }
+        }
+    },
+
+    tryRecoverFromPuzzle: (puzzle) => {
+        const { inventory } = get();
+        const interactedPuzzle = getPuzzleById(puzzle.id)
+        const puzzlePart = interactedPuzzle.parts[puzzle.part]
+
+        if (interactedPuzzle.canWithdrawItems && puzzlePart !== null) {
+            const item = withdrawPieceFromPuzzle(puzzle.id, puzzle.part)
+            const newInventory = [...inventory];
+
+            let index = -1
+            for (let i = 0; i < inventory.length; i++) {
+                if (inventory[i] === null) {
+                    index = i
+                    break;
+                }
+            }
+
+            if (index === -1) {
+                return false;
+            } else {
+                newInventory[index] = item;
+                set({ inventory: newInventory });
+                return true
+
+            }
+        }
     },
 
     tryGetWeaponInformation: (equipped) => {

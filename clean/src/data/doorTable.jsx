@@ -112,7 +112,8 @@ const introOneUpper = [
             rotationY: 3
         },
         cutsceneId: "test_cutscene_two",
-        isSceneViewed: false
+        isSceneViewed: false,
+        activeScene: false
     },
 ]
 
@@ -193,4 +194,25 @@ export function hasViewedScene(id) {
     return false;
 }
 
+export function setSceneAsActiveViaCutscene(cutsceneId) {
+    for (const levelDoors of Object.values(DOOR_TABLE)) {
+        const door = levelDoors.find(d => d.cutsceneId === cutsceneId);
+        if (door) {
+            door.activeScene = true;
+            return true;
+        }
+    }
+    return false;
+}
+
+export function handleUnlockDoor(id) {
+    for (const levelDoors of Object.values(DOOR_TABLE)) {
+        const door = levelDoors.find(d => d.id === id);
+        if (door) {
+            door.isUnlocked = true;
+            return true;
+        }
+    }
+    return false;
+}
 
