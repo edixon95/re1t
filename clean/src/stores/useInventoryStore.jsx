@@ -234,6 +234,7 @@ export const useInventoryStore = create((set, get) => ({
 
     tryUseInventoryItemDoor: (item, inventoryIndex, usedOnDoorId) => {
         const { inventory } = get();
+        const door = getDoor(usedOnDoorId);
         if (!door) return false;
 
         const isKey = (requiredArr, check) => {
@@ -314,7 +315,7 @@ export const useInventoryStore = create((set, get) => ({
     },
 
     tryUseInventoryItemPuzzle: (inventoryIndex, puzzle) => {
-        const { inventory } = get();
+        const { inventory, equippedItem } = get();
         const interactedPuzzle = getPuzzleById(puzzle.id)
         const puzzlePart = interactedPuzzle.parts[puzzle.part]
         // Can the puzzle return items if incomplete
@@ -324,13 +325,18 @@ export const useInventoryStore = create((set, get) => ({
         }
 
         const newInventory = [...inventory];
+        const usedEquippedWeapon = newInventory[inventoryIndex].item === equippedItem.equipped
+
+        if (usedEquippedWeapon) {
+            set({ equippedItem: { equipped: null, cAmmo: 0, mAmmo: 0 } });
+        }
+
         if (puzzlePart !== null) {
             const returnedItem = replacePieceFromPuzzle(puzzle.id, puzzle.part, newInventory[inventoryIndex])
             const text = replaceTextPuzzle(interactedPuzzle.placed[puzzle.part].replace, puzzlePart.item, newInventory[inventoryIndex].item)
             newInventory[inventoryIndex] = returnedItem;
             set({ inventory: newInventory });
             triggerUIText(text)
-
         } else {
             const text = replaceText(interactedPuzzle.placed[puzzle.part].empty, newInventory[inventoryIndex].item)
             addPieceToPuzzle(puzzle.id, puzzle.part, newInventory[inventoryIndex])
@@ -338,6 +344,7 @@ export const useInventoryStore = create((set, get) => ({
             set({ inventory: newInventory });
             triggerUIText(text)
         }
+
 
         const reward = isPuzzleComplete(puzzle.id)
         if (reward) {
