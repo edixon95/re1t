@@ -235,18 +235,64 @@ export const useInventoryStore = create((set, get) => ({
         const door = getDoor(usedOnDoorId);
         if (!door) return false;
 
+        const isKey = (requiredArr, check) => {
+            return requiredArr.includes(check)
+        }
+
+        const replaceText = (text, replace) => {
+            console.log(text, replace)
+            return text.replace("{item}", replace)
+        }
         // Wrong item
-        if (door.requiredItem !== item) {
+        if (!isKey(door.requiredItems, item)) {
             const specialText = door?.interact?.specialFail[item]
-            let text;
-            if (specialText) {
-                text = specialText.replace("{item}", item)
-            } else {
-                text = door.interact.fail.replace("{item}", item);
-            }
+            const text = replaceText(specialText ? specialText : door.interact.fail, item);
             triggerUIText(text);
             return false;
         }
+
+        const isAlreadyInserted = (inserted, check) => {
+            return inserted.includes(check)
+        }
+
+        const isLockIncomplete = (requiredArr, inserted, check) => {
+            inserted.push(check);
+
+            const count = arr =>
+                arr.reduce((acc, val) => {
+                    acc[val] = (acc[val] || 0) + 1;
+                    return acc;
+                }, {});
+
+            const requiredCount = count(requiredArr);
+            const insertedCount = count(inserted);
+
+            for (const key in requiredCount) {
+                if (requiredCount[key] !== insertedCount[key]) {
+                    return inserted;
+                }
+            }
+
+            return false;
+        };
+
+        if (isAlreadyInserted(door.requiredInserted, item)) {
+            const text = replaceText(door.interact.partialFail, item)
+            triggerUIText(text);
+            return false;
+        }
+
+        const requireMoreKeys = isLockIncomplete(door.requiredItems, door.requiredInserted, item)
+
+
+        let interactText;
+        if (requireMoreKeys) {
+
+            interactText = replaceText(door.interact.partialSuccess[requireMoreKeys.length - 1], item)
+        } else {
+            interactText = replaceText(door.interact.success, item)
+        }
+
 
         // Consume item if single-use
         if (door.isKeySingle) {
@@ -255,18 +301,19 @@ export const useInventoryStore = create((set, get) => ({
             set({ inventory: newInventory });
         }
 
-        // Unlock door (persistent)
+
+        triggerUIText(interactText);
         for (const levelKey in DOOR_TABLE) {
             const doors = DOOR_TABLE[levelKey];
             const doorIdx = doors.findIndex(d => d.id === usedOnDoorId);
             if (doorIdx !== -1) {
-                DOOR_TABLE[levelKey][doorIdx].isUnlocked = true;
+                DOOR_TABLE[levelKey][doorIdx].requiredInserted = requireMoreKeys;
+                DOOR_TABLE[levelKey][doorIdx].isUnlocked = !requireMoreKeys;
                 break;
             }
         }
 
-        triggerUIText(door.interact.success);
-        return true;
+        return !requireMoreKeys
     },
 
     tryGetWeaponInformation: (equipped) => {
